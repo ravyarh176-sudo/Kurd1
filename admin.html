@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>پانێڵی سەرۆک | Kurd Technology</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+<link rel="stylesheet" href="chat.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+</head>
+<body>
+
+  <div class="bg"></div>
+
+  <header class="topbar">
+    <a class="brand" href="services.html">
+      <span class="back-arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5l7 7-7 7"></path><path d="M21 12H3"></path></svg>
+      </span>
+      <span class="brand-title">پانێڵی سەرۆک</span>
+    </a>
+    <span class="owner-pill">⭐ خاوەنی وێبسایت</span>
+  </header>
+
+  <main class="wrap">
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <b id="statTotal">–</b>
+        <span>کۆی بەکارهێنەران</span>
+      </div>
+      <div class="stat-box">
+        <b id="statBanned">–</b>
+        <span>دەرکراو</span>
+      </div>
+      <div class="stat-box">
+        <b id="statOwners">–</b>
+        <span>خاوەن</span>
+      </div>
+    </div>
+
+    <div class="section-title">هەموو بەکارهێنەران</div>
+    <div class="user-list" id="userList">
+      <div class="loading-hint">بارکردن...</div>
+    </div>
+
+  </main>
+
+  <!-- ============ User detail sheet ============ -->
+  <div class="admin-overlay" id="userSheetOverlay">
+    <div class="admin-sheet">
+      <button type="button" class="admin-close" id="userSheetClose">✕</button>
+
+      <div class="user-detail-head">
+        <div class="user-detail-avatar" id="udAvatar">؟</div>
+        <div class="user-detail-name" id="udName">—</div>
+        <div class="user-detail-role" id="udRole">بەکارهێنەر</div>
+      </div>
+
+      <div class="admin-tabs">
+        <button type="button" class="admin-tab active" data-tab="chat">چات</button>
+        <button type="button" class="admin-tab" data-tab="manage">بەڕێوەبردن</button>
+      </div>
+
+      <div class="admin-tab-panel" id="tabChat">
+        <div class="kc-panel" id="userChatMount" style="height:420px;"></div>
+      </div>
+
+      <div class="admin-tab-panel" id="tabManage" hidden>
+        <div class="manage-block">
+          <div class="manage-row">
+            <span>دۆخی ئێستا</span>
+            <b id="udStatus">چالاک</b>
+          </div>
+
+          <div class="field" id="banReasonField">
+            <label>هۆکاری دەرکردن (ئارەزوومەندانە)</label>
+            <textarea id="banReasonInput" rows="3" placeholder="بۆ نموونە: پێشێلکردنی یاساکان..."></textarea>
+          </div>
+
+          <button type="button" class="btn-ban" id="banToggleBtn">دەرکردن لە ماڵپەڕ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="guard.js"></script>
+  <script src="chat.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
