@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Kurd Technology | چوونەژوورەوە</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+</head>
+<body>
+
+  <div class="bg">
+    <img class="bg-img" src="kurdistan-mobile-1.png
+" alt="ئاسۆی هەلێر لەگەڵ ئاڵای کوردستان">
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="#241800"><path d="M12 2l1.9 5.8H20l-4.9 3.6 1.9 5.8L12 13.6l-5 3.6 1.9-5.8L4 7.8h6.1L12 2z"/></svg>
+      </div>
+      <div class="brand-stack">
+        <span>کورد تەکنەلۆجی</span>
+        <span class="brand-en">Kurd Technology</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div class="card">
+      <div class="sun-glow"></div>
+
+      <!-- ======= STEP 1: welcome + Google sign-in ======= -->
+      <div class="auth-step" id="stepWelcome">
+        <div class="card-header">
+          <div class="badge">
+            <svg viewBox="0 0 24 24" fill="#241800"><path d="M12 2l1.9 5.8H20l-4.9 3.6 1.9 5.8L12 13.6l-5 3.6 1.9-5.8L4 7.8h6.1L12 2z"/></svg>
+          </div>
+          <h2>بەخێربێیت بۆ Kurd Technology</h2>
+          <div class="sub">پلاتفۆرمی تۆ بۆ ئامرازی دیجیتاڵی — بە یەک کرتە دەستپێبکە</div>
+        </div>
+
+        <div class="auth-error" id="authError" hidden></div>
+
+        <button type="button" class="btn-google-big" id="googleBtn">
+          <svg viewBox="0 0 512 512"><path d="M113.47,309.408L95.648,375.94l-65.139,1.378C11.042,341.211,0,299.9,0,256c0-42.451,10.324-82.483,28.624-117.732h0.014l57.992,10.632l25.404,57.644c-5.317,15.501-8.215,32.141-8.215,49.456C103.821,274.792,107.225,292.797,113.47,309.408z" fill="#FBBB00"></path><path d="M507.527,208.176C510.467,223.662,512,239.655,512,256c0,18.328-1.927,36.206-5.598,53.451c-12.462,58.683-45.025,109.925-90.134,146.187l-0.014-0.014l-73.044-3.727l-10.338-64.535c29.932-17.554,53.324-45.025,65.646-77.911h-136.89V208.176h138.887L507.527,208.176L507.527,208.176z" fill="#518EF8"></path><path d="M416.253,455.624l0.014,0.014C372.396,490.901,316.666,512,256,512c-97.491,0-182.252-54.491-225.491-134.681l82.961-67.91c21.619,57.698,77.278,98.771,142.53,98.771c28.047,0,54.323-7.582,76.87-20.818L416.253,455.624z" fill="#28B446"></path><path d="M419.404,58.936l-82.933,67.896c-23.335-14.586-50.919-23.012-80.471-23.012c-66.729,0-123.429,42.957-143.965,102.724l-83.397-68.276h-0.014C71.23,56.123,157.06,0,256,0C318.115,0,375.068,22.126,419.404,58.936z" fill="#F14336"></path></svg>
+          <span>چوونەژوورەوە بە Google</span>
+        </button>
+
+        <p class="google-hint">هیچ پاسۆرد یان کۆدێکی تر پێویست ناکات — تەنها هەژماری Google‌ت هەڵبژێرە</p>
+      </div>
+
+      <!-- ======= STEP 2: first-time visitors pick a display name ======= -->
+      <div class="auth-step" id="stepName" hidden>
+        <div class="card-header">
+          <div class="badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#241800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6"></path></svg>
+          </div>
+          <h2>ناوت چیە؟</h2>
+          <div class="sub">ئەم ناوە لە ماڵپەڕەکەدا پیشان دەدرێت</div>
+        </div>
+
+        <div class="auth-error" id="nameError" hidden></div>
+
+        <form id="nameForm">
+          <div class="field">
+            <label for="displayName">ناوی نیشاندان</label>
+            <div class="input-shell">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6"></path></svg>
+              <input id="displayName" type="text" placeholder="ناوت بنووسە" autocomplete="name">
+            </div>
+          </div>
+          <button class="btn-submit" type="submit" id="nameSubmitBtn">بەردەوامبوون</button>
+        </form>
+      </div>
+
+      <!-- ======= STEP 3: brief welcome flash before entering the app ======= -->
+      <div class="auth-step welcome-flash" id="stepFlash" hidden>
+        <div class="badge-big">
+          <svg viewBox="0 0 24 24" fill="#241800"><path d="M12 2l1.9 5.8H20l-4.9 3.6 1.9 5.8L12 13.6l-5 3.6 1.9-5.8L4 7.8h6.1L12 2z"/></svg>
+        </div>
+        <h2 id="flashText">بەخێربێیت</h2>
+        <div class="sub">چاوەڕوان بە...</div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="legal">© Kurd Technology — دروستکراوە بە خۆشەویستییەوە لە کوردستان</footer>
+
+  <script src="auth.js"></script>
+</body>
+</html>
