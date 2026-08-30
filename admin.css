@@ -1,0 +1,157 @@
+:root{
+  --gold:#FDBA12;
+  --gold-soft:#F3D27A;
+  --ink:#0A0E17;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  font-family:'Vazirmatn', sans-serif;
+  background:var(--ink);
+  color:#fff;
+}
+.bg{
+  position:fixed; inset:0; z-index:0;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(253,186,18,0.13), transparent 38%),
+    radial-gradient(circle at 90% 85%, rgba(206,17,38,0.12), transparent 42%),
+    var(--ink);
+}
+
+.topbar{
+  position:relative; z-index:2;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 18px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:#fff; }
+.back-arrow{
+  width:28px; height:28px; border-radius:8px;
+  background: rgba(255,255,255,.06);
+  display:flex; align-items:center; justify-content:center;
+  color:rgba(255,255,255,.75);
+  transform: scaleX(-1);
+}
+.back-arrow svg{ width:14px; height:14px; }
+.brand-title{ font-family:'Noto Kufi Arabic', sans-serif; font-weight:700; font-size:14.5px; }
+.owner-pill{
+  font-size:11px; font-weight:700; color:var(--gold);
+  background: rgba(253,186,18,.12); border:1px solid rgba(253,186,18,.3);
+  padding:5px 12px; border-radius:999px;
+}
+
+.wrap{ position:relative; z-index:2; max-width:520px; margin:0 auto; padding:18px 16px 50px; }
+
+.stats-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:22px; }
+.stat-box{
+  background: rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:14px;
+  padding:14px 8px;
+  text-align:center;
+}
+.stat-box b{ display:block; font-size:20px; font-weight:800; color:var(--gold); }
+.stat-box span{ font-size:10px; color:rgba(255,255,255,.55); }
+
+.section-title{
+  font-family:'Noto Kufi Arabic', sans-serif;
+  font-weight:700; font-size:13.5px;
+  margin-bottom:10px;
+  color:rgba(255,255,255,.85);
+}
+
+.user-list{ display:flex; flex-direction:column; gap:8px; }
+.loading-hint{ color:rgba(255,255,255,.4); font-size:12px; text-align:center; padding:20px; }
+
+.user-card{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background: rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:13px;
+  padding:10px 12px;
+  cursor:pointer;
+}
+.user-card:active{ background: rgba(255,255,255,.08); }
+.uc-avatar{
+  width:36px; height:36px; border-radius:50%; flex-shrink:0;
+  background: linear-gradient(135deg, #3E5988, #22314F);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:13px; color:#fff;
+}
+.uc-info{ flex:1; min-width:0; }
+.uc-name{ font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.uc-sub{ font-size:10px; color:rgba(255,255,255,.5); margin-top:2px; }
+.uc-badge{
+  font-size:9.5px; font-weight:700; padding:3px 8px; border-radius:999px; flex-shrink:0;
+}
+.uc-badge.owner{ background: rgba(253,186,18,.15); color:var(--gold); }
+.uc-badge.banned{ background: rgba(206,17,38,.18); color:#FF6B7A; }
+.uc-badge.active{ background: rgba(12,122,61,.18); color:#4ADE80; }
+
+/* ---------- Detail sheet ---------- */
+.admin-overlay{
+  position:fixed; inset:0; z-index:60;
+  background: rgba(6,9,16,.75);
+  backdrop-filter: blur(6px);
+  display:flex; align-items:flex-end; justify-content:center;
+  opacity:0; pointer-events:none; transition: opacity .2s ease;
+}
+.admin-overlay.open{ opacity:1; pointer-events:auto; }
+.admin-sheet{
+  position:relative; width:100%; max-width:480px; max-height:88vh;
+  background:#11161F; border:1px solid rgba(255,255,255,.1);
+  border-radius:20px 20px 0 0;
+  transform:translateY(16px); transition: transform .25s ease;
+  overflow-y:auto;
+}
+.admin-overlay.open .admin-sheet{ transform:translateY(0); }
+.admin-close{
+  position:absolute; top:12px; left:12px; z-index:2;
+  width:28px; height:28px; border-radius:50%; border:none;
+  background: rgba(255,255,255,.1); color:#fff; font-size:12px; cursor:pointer;
+}
+
+.user-detail-head{
+  text-align:center; padding:28px 20px 16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.user-detail-avatar{
+  width:56px; height:56px; border-radius:50%; margin:0 auto 10px;
+  background: linear-gradient(135deg, #FDBA12, #C88900);
+  color:#241800; font-weight:800; font-size:20px;
+  display:flex; align-items:center; justify-content:center;
+}
+.user-detail-name{ font-family:'Noto Kufi Arabic', sans-serif; font-weight:700; font-size:15px; }
+.user-detail-role{ font-size:11px; color:rgba(255,255,255,.5); margin-top:3px; }
+
+.admin-tabs{ display:flex; gap:6px; padding:12px 16px 0; }
+.admin-tab{
+  flex:1; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04);
+  color:rgba(255,255,255,.7); font-size:12px; font-weight:600;
+  padding:8px; border-radius:9px; cursor:pointer;
+}
+.admin-tab.active{ border-color:var(--gold); background: rgba(253,186,18,.12); color:#fff; }
+
+.admin-tab-panel{ padding:14px 16px 20px; }
+
+.manage-block{ display:flex; flex-direction:column; gap:14px; }
+.manage-row{ display:flex; align-items:center; justify-content:space-between; font-size:12.5px; }
+.manage-row b{ color:var(--gold-soft); }
+
+.field label{ display:block; font-size:11px; font-weight:600; color:rgba(255,255,255,.6); margin-bottom:6px; }
+.field textarea{
+  width:100%; background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14);
+  border-radius:9px; padding:9px 11px; color:#fff; font-family:'Vazirmatn', sans-serif;
+  font-size:12.5px; outline:none; resize:vertical;
+}
+.field textarea::placeholder{ color:rgba(255,255,255,.35); }
+
+.btn-ban{
+  height:44px; border:none; border-radius:11px;
+  background: linear-gradient(135deg, #EF4444, #7F1D1D);
+  color:#fff; font-family:'Noto Kufi Arabic', sans-serif; font-weight:700; font-size:13px;
+  cursor:pointer;
+}
+.btn-ban.is-banned{ background: linear-gradient(135deg, #4ADE80, #0E4A2C); }
