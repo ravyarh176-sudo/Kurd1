@@ -148,6 +148,93 @@ create or replace view public.ratings_summary as
 grant select on public.ratings_summary to authenticated;
 
 
+-- ---------- 5. SITE SECTIONS (owner-managed homepage cards) ----------
+create table if not exists public.site_sections (
+  id uuid default gen_random_uuid() primary key,
+  title text not null,
+  description text default '',
+  image_url text default '',
+  icon text default 'star',
+  link text default '#',
+  color text default '#F5B800',
+  card_style text default 'games',
+  sort_order int not null default 0,
+  is_visible boolean not null default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  created_by uuid references auth.users
+);
+alter table public.site_sections enable row level security;
+
+-- everyone can see the sections that are turned on
+drop policy if exists "visible sections are viewable by everyone" on public.site_sections;
+create policy "visible sections are viewable by everyone"
+  on public.site_sections for select
+  using ( is_visible = true );
+
+-- the owner can see everything, including hidden sections, to manage them
+drop policy if exists "owner can view all sections" on public.site_sections;
+create policy "owner can view all sections"
+  on public.site_sections for select
+  using (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'owner')
+  );
+
+drop policy if exists "owner can insert sections" on public.site_sections;
+create policy "owner can insert sections"
+  on public.site_sections for insert
+  with check (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'owner')
+  );
+
+drop policy if exists "owner can update sections" on public.site_sections;
+create policy "owner can update sections"
+  on public.site_sections for update
+  using (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'owner')
+  )
+  with check (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'owner')
+  );
+
+drop policy if exists "owner can delete sections" on public.site_sections;
+create policy "owner can delete sections"
+  on public.site_sections for delete
+  using (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'owner')
+  );
+
+-- keep updated_at current automatically
+create or replace function public.touch_site_sections()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists site_sections_touch on public.site_sections;
+create trigger site_sections_touch
+  before update on public.site_sections
+  for each row execute procedure public.touch_site_sections();
+
+-- seed with the 8 sections the homepage already shows, so switching to
+-- the database-driven system changes nothing visually on first load.
+-- (safe to re-run: only inserts if the table is currently empty)
+insert into public.site_sections (title, description, icon, link, color, card_style, sort_order, is_visible)
+select * from (values
+  ('یاری و یاریگەکان', 'یاری خۆشو یاریگە جۆراوجۆرەکان بۆ کاتی بەتاڵی', 'gamepad',    '#',               '#4B3A93', 'games',   1, true),
+  ('دروستکردنی CV',    'CVـیەکی جوان و پیشەیی بە شێواز و قاڵبی جوان دروست بکە', 'idcard', 'cv-builder.html', '#3E5988', 'cv',      2, true),
+  ('هەلی کار',         'هەلی کار و کارمەندی جیاواز لە کوردستان', 'briefcase',  '#',               '#0E6E5E', 'jobs',    3, true),
+  ('ئامرازەکانی AI',   'ئامرازە زیرەکەکان بۆ کار و فێربوون و زانیاری', 'robot', '#',               '#3B2E70', 'ai',      4, true),
+  ('دیزاین و گرافیک',  'دروستکردنی دیزاین و وێنە بە ئامرازە جوانەکان', 'palette', '#',             '#7A5426', 'design',  5, true),
+  ('فێربوون و کۆرس',   'کۆرس و وانەی فێربوونی پیشەیی و تایبەت', 'graduation', '#',                 '#1F6B45', 'courses', 6, true),
+  ('وێنە و ڤیدیۆ',     'دەستکاری و ڕازاندنەوەی وێنە و ڤیدیۆ بە شێوازێکی ئاسان', 'image', '#',       '#23507F', 'media',   7, true),
+  ('کۆد و وێبسایت',    'ئامراز بۆ کۆدنووسی و دروستکردنی وێبسایت', 'code', '#',                     '#6B6321', 'code',    8, true)
+) as seed(title, description, icon, link, color, card_style, sort_order, is_visible)
+where not exists (select 1 from public.site_sections);
+
+
 -- ============================================================
 -- LAST STEP — run this AFTER you have signed up once on the site
 -- with ravyarhasan023@gmail.com, to make that account the owner:
