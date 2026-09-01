@@ -26,7 +26,12 @@
     <span class="owner-pill">⭐ خاوەنی وێبسایت</span>
   </header>
 
-  <main class="wrap">
+  <div class="top-tabs">
+    <button type="button" class="top-tab active" id="topTabUsers">👥 بەکارهێنەران</button>
+    <button type="button" class="top-tab" id="topTabSections">🗂️ بەڕێوەبردنی بەشەکان</button>
+  </div>
+
+  <main class="wrap" id="usersPanel">
 
     <div class="stats-row">
       <div class="stat-box">
@@ -48,6 +53,16 @@
       <div class="loading-hint">بارکردن...</div>
     </div>
 
+  </main>
+
+  <!-- ============ SECTIONS MANAGEMENT ============ -->
+  <main class="wrap" id="sectionsPanel" hidden>
+    <button type="button" class="btn-add-section" id="addSectionBtn">➕ بەشی نوێ زیاد بکە</button>
+
+    <div class="section-title">بەشەکانی پەڕەی سەرەکی</div>
+    <div class="sections-admin-list" id="sectionsList">
+      <div class="loading-hint">بارکردن...</div>
+    </div>
   </main>
 
   <!-- ============ User detail sheet ============ -->
@@ -88,8 +103,70 @@
     </div>
   </div>
 
+  <!-- ============ Add / Edit section sheet ============ -->
+  <div class="admin-overlay" id="sectionFormOverlay">
+    <div class="admin-sheet">
+      <button type="button" class="admin-close" id="sectionFormClose">✕</button>
+      <div class="section-form-title" id="sectionFormTitle">زیادکردنی بەشی نوێ</div>
+
+      <div class="field">
+        <label>ناوی بەش</label>
+        <input id="sfTitle" type="text" placeholder="بۆ نموونە: هەلی کار">
+      </div>
+      <div class="field">
+        <label>ناونیشانی کورت</label>
+        <textarea id="sfDescription" rows="2" placeholder="ڕوونکردنەوەیەکی کورت..."></textarea>
+      </div>
+      <div class="field">
+        <label>لینک (بەتاڵی بهێڵەوە یان "#" بۆ "بەم زووانە")</label>
+        <input id="sfLink" type="text" placeholder="https:// ... یان cv-builder.html">
+      </div>
+      <div class="field">
+        <label>لینکی وێنە (ئارەزوومەندانە)</label>
+        <input id="sfImage" type="text" placeholder="https://...">
+      </div>
+
+      <div class="field">
+        <label>ئایکۆن</label>
+        <div class="icon-picker" id="iconPicker"></div>
+      </div>
+
+      <div class="field">
+        <label>ڕەنگ و دیزاینی کارت</label>
+        <div class="style-picker" id="stylePicker"></div>
+      </div>
+      <div class="field" id="customColorRow" hidden>
+        <label>ڕەنگی خۆت هەڵبژێرە</label>
+        <input id="sfCustomColor" type="color" value="#F5B800">
+      </div>
+
+      <label class="toggle-row" for="sfVisible">
+        <span class="toggle-switch">
+          <input id="sfVisible" type="checkbox" checked>
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        </span>
+        <span class="toggle-text">بەشەکە لە پەڕەی سەرەکی پیشان بدرێت</span>
+      </label>
+
+      <button type="button" class="btn-save-section" id="sectionSaveBtn">پاشەکەوتکردن</button>
+    </div>
+  </div>
+
+  <!-- ============ Generic confirm dialog ============ -->
+  <div class="admin-overlay" id="confirmOverlay">
+    <div class="admin-sheet confirm-sheet">
+      <p id="confirmMessage">دڵنیایت؟</p>
+      <div class="confirm-actions">
+        <button type="button" class="confirm-yes" id="confirmYesBtn">بەڵێ، بیسڕەوە</button>
+        <button type="button" class="confirm-no" id="confirmNoBtn">نەخێر</button>
+      </div>
+    </div>
+  </div>
+
   <script src="guard.js"></script>
   <script src="chat.js"></script>
   <script src="admin.js"></script>
+  <script src="sections-icons.js"></script>
+  <script src="admin-sections.js"></script>
 </body>
 </html>
