@@ -47,17 +47,11 @@ function kurdtechRenderSectionCard(section) {
     tag.style.background = `linear-gradient(150deg, ${c}, ${shadeColor(c, -35)})`;
   }
 
-  if (section.image_url) {
-    tag.style.backgroundImage =
-      `linear-gradient(150deg, rgba(0,0,0,.35), rgba(0,0,0,.55)), url('${section.image_url.replace(/'/g, "%27")}')`;
-    tag.style.backgroundSize = 'cover';
-    tag.style.backgroundPosition = 'center';
-  }
-
   tag.innerHTML = `
-    <div class="cat-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${iconSvg}</svg>
-    </div>
+    ${section.image_url
+      ? `<div class="cat-heart-photo" style="background-image:url('${section.image_url.replace(/'/g, "%27")}')"></div>`
+      : `<div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${iconSvg}</svg></div>`
+    }
     <h3></h3>
     <p></p>
     <span class="cat-go">بینینە <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5l7 7-7 7M21 12H3"></path></svg></span>
@@ -73,6 +67,19 @@ async function kurdtechLoadSections() {
   if (!grid) return;
 
   const supabase = window.kurdtechSupabase;
+
+  // Safety net: never leave the visitor staring at "...بارکردن" forever.
+  // If the fetch hasn't finished in 8s (bad connection, RLS/table not set
+  // up yet, etc.) show a clear message with a retry button instead.
+  const timeoutId = setTimeout(() => {
+    if (document.getElementById('cardsLoading')) {
+      document.getElementById('cardsLoading').innerHTML =
+        'نەتوانرا بەشەکان بار بکرێن. <button type="button" id="cardsRetryBtn" class="cards-retry">هەوڵدانەوە</button>';
+      const retryBtn = document.getElementById('cardsRetryBtn');
+      if (retryBtn) retryBtn.addEventListener('click', kurdtechLoadSections);
+    }
+  }, 8000);
+
   try {
     const { data, error } = await supabase
       .from('site_sections')
@@ -81,16 +88,26 @@ async function kurdtechLoadSections() {
       .order('sort_order', { ascending: true });
     if (error) throw error;
 
-    if (loading) loading.remove();
+    clearTimeout(timeoutId);
+    const stillLoading = document.getElementById('cardsLoading');
+    if (stillLoading) stillLoading.remove();
+    grid.querySelectorAll('.cat-card').forEach(c => c.remove()); // avoid duplicates on retry
 
     if (!data || !data.length) {
-      grid.innerHTML = '<p class="cards-empty">هیچ بەشێک ئێستا نییە.</p>';
+      grid.insertAdjacentHTML('beforeend', '<p class="cards-empty">هیچ بەشێک ئێستا نییە.</p>');
       return;
     }
 
     data.forEach(section => grid.appendChild(kurdtechRenderSectionCard(section)));
   } catch (err) {
-    if (loading) loading.textContent = 'نەتوانرا بەشەکان بار بکرێن.';
+    clearTimeout(timeoutId);
+    const stillLoading = document.getElementById('cardsLoading');
+    if (stillLoading) {
+      stillLoading.innerHTML =
+        'نەتوانرا بەشەکان بار بکرێن. <button type="button" id="cardsRetryBtn" class="cards-retry">هەوڵدانەوە</button>';
+      const retryBtn = document.getElementById('cardsRetryBtn');
+      if (retryBtn) retryBtn.addEventListener('click', kurdtechLoadSections);
+    }
     console.error('kurdtechLoadSections failed:', err);
   }
 }
