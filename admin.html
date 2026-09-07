@@ -13,6 +13,14 @@
 <script src="config.js"></script>
 </head>
 <body>
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <clipPath id="kurdtechHeart" clipPathUnits="objectBoundingBox">
+        <path d="M0.5,1 C0.5,1 0,0.586 0,0.276 C0,0.103 0.125,0 0.25,0 C0.344,0 0.4375,0.069 0.5,0.172 C0.5625,0.069 0.656,0 0.75,0 C0.875,0 1,0.103 1,0.276 C1,0.586 0.5,1 0.5,1 Z"/>
+      </clipPath>
+    </defs>
+  </svg>
+
 
   <div class="bg"></div>
 
@@ -28,7 +36,8 @@
 
   <div class="top-tabs">
     <button type="button" class="top-tab active" id="topTabUsers">👥 بەکارهێنەران</button>
-    <button type="button" class="top-tab" id="topTabSections">🗂️ بەڕێوەبردنی بەشەکان</button>
+    <button type="button" class="top-tab" id="topTabSections">🗂️ بەشەکان</button>
+    <button type="button" class="top-tab" id="topTabGames">🎮 یارییەکان</button>
   </div>
 
   <main class="wrap" id="usersPanel">
@@ -64,6 +73,79 @@
       <div class="loading-hint">بارکردن...</div>
     </div>
   </main>
+
+  <!-- ============ GAMES MANAGEMENT ============ -->
+  <main class="wrap" id="gamesPanel" hidden>
+    <button type="button" class="btn-add-section" id="addGameBtn">➕ یاری نوێ زیاد بکە (فایلی ZIP)</button>
+
+    <div class="section-title">یارییەکانی وێبسایت</div>
+    <div class="sections-admin-list" id="gamesList">
+      <div class="loading-hint">بارکردن...</div>
+    </div>
+  </main>
+
+  <!-- ============ Add/Edit game form ============ -->
+  <div class="admin-overlay" id="gameFormOverlay">
+    <div class="admin-sheet">
+      <button type="button" class="admin-close" id="gameFormClose">✕</button>
+      <div class="section-form-title" id="gameFormTitle">یاری نوێ زیاد بکە</div>
+
+      <div class="field">
+        <label>ناوی یاری</label>
+        <input id="gfTitle" type="text" placeholder="بۆ نموونە: یاری خشتەی سیاسی">
+      </div>
+      <div class="field">
+        <label>ووسفی کورت (ئارەزوومەندانە)</label>
+        <textarea id="gfDescription" rows="2" placeholder="چ جۆرە یارییەکە..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>وێنەی یاری</label>
+        <div class="section-photo-editor-row">
+          <div class="section-photo-frame" id="gamePhotoFrame">
+            <canvas id="gamePhotoCanvas" width="220" height="140"></canvas>
+            <div class="section-photo-placeholder" id="gamePhotoPlaceholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9.5" r="1.5"></circle><path d="M21 16l-5-5L5 20"></path></svg>
+            </div>
+            <button type="button" class="photo-remove" id="gamePhotoRemove" title="سڕینەوەی وێنە">✕</button>
+          </div>
+          <div class="photo-controls">
+            <label class="btn-upload" for="gfImageFile">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"></path><path d="M6 10l6-6 6 6"></path><path d="M4 20h16"></path></svg>
+              وێنە هەڵبژێرە لە مۆبایل
+            </label>
+            <input id="gfImageFile" type="file" accept="image/*" hidden>
+            <div class="zoom-row">
+              <span class="zoom-label">قەبارە</span>
+              <input id="gfImageZoom" type="range" min="1" max="2.8" step="0.01" value="1" disabled>
+            </div>
+            <p class="photo-hint">وێنەکە بکێشە بۆ گواستنەوە، سلایدەر بۆ زووم</p>
+          </div>
+        </div>
+        <input id="gfImage" type="text" hidden>
+      </div>
+
+      <div class="field">
+        <label>فایلی یاری (ZIP)</label>
+        <label class="btn-upload" for="gfZipFile" style="width:100%; justify-content:center; height:44px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span id="gfZipLabel">فایلی ZIPی یاری هەڵبژێرە</span>
+        </label>
+        <input id="gfZipFile" type="file" accept=".zip" hidden>
+        <p class="photo-hint">فایلەکە دەبێت index.html لەناوی هەبێت (ڕیشەی فۆڵدەر یان ناو فۆڵدەرێک)</p>
+      </div>
+
+      <div class="field">
+        <label class="toggle-row" for="gfVisible" style="display:flex; align-items:center; gap:8px;">
+          <input id="gfVisible" type="checkbox" checked style="width:16px;height:16px;">
+          پیشاندان لە پەڕەی یارییەکان
+        </label>
+      </div>
+
+      <button type="button" class="btn-save-section" id="gameSaveBtn">پاشەکەوتکردن</button>
+      <div class="upload-progress" id="gameUploadProgress" hidden></div>
+    </div>
+  </div>
 
   <!-- ============ User detail sheet ============ -->
   <div class="admin-overlay" id="userSheetOverlay">
@@ -122,7 +204,29 @@
         <input id="sfLink" type="text" placeholder="https:// ... یان cv-builder.html">
       </div>
       <div class="field">
-        <label>لینکی وێنە (ئارەزوومەندانە)</label>
+        <label>وێنەی بەش (ئارەزوومەندانە)</label>
+        <div class="section-photo-editor-row">
+          <div class="section-photo-frame" id="sectionPhotoFrame">
+            <canvas id="sectionPhotoCanvas" width="180" height="180"></canvas>
+            <div class="section-photo-placeholder" id="sectionPhotoPlaceholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9.5" r="1.5"></circle><path d="M21 16l-5-5L5 20"></path></svg>
+            </div>
+            <button type="button" class="photo-remove" id="sectionPhotoRemove" title="سڕینەوەی وێنە">✕</button>
+          </div>
+          <div class="photo-controls">
+            <label class="btn-upload" for="sfImageFile">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"></path><path d="M6 10l6-6 6 6"></path><path d="M4 20h16"></path></svg>
+              وێنە هەڵبژێرە لە مۆبایل
+            </label>
+            <input id="sfImageFile" type="file" accept="image/*" hidden>
+            <div class="zoom-row">
+              <span class="zoom-label">قەبارە</span>
+              <input id="sfImageZoom" type="range" min="1" max="2.8" step="0.01" value="1" disabled>
+            </div>
+            <p class="photo-hint">وێنەکە بکێشە بۆ گواستنەوە، سلایدەر بۆ زووم</p>
+          </div>
+        </div>
+        <label style="margin-top:10px; display:block;">یاخود لینکی وێنە بنووسە</label>
         <input id="sfImage" type="text" placeholder="https://...">
       </div>
 
@@ -163,10 +267,13 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script src="guard.js"></script>
   <script src="chat.js"></script>
   <script src="admin.js"></script>
   <script src="sections-icons.js"></script>
+  <script src="admin-photo-editor.js"></script>
   <script src="admin-sections.js"></script>
+  <script src="admin-games.js"></script>
 </body>
 </html>
