@@ -118,6 +118,41 @@ create policy "voice notes are publicly readable"
   using ( bucket_id = 'voice-messages' );
 
 
+-- ---------- 3b. STORAGE: section images (admin-uploaded card photos) ----------
+insert into storage.buckets (id, name, public)
+values ('section-images', 'section-images', true)
+on conflict (id) do nothing;
+
+drop policy if exists "owner can upload section images" on storage.objects;
+create policy "owner can upload section images"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'section-images'
+    and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'owner')
+  );
+
+drop policy if exists "owner can update section images" on storage.objects;
+create policy "owner can update section images"
+  on storage.objects for update
+  using (
+    bucket_id = 'section-images'
+    and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'owner')
+  );
+
+drop policy if exists "owner can delete section images" on storage.objects;
+create policy "owner can delete section images"
+  on storage.objects for delete
+  using (
+    bucket_id = 'section-images'
+    and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'owner')
+  );
+
+drop policy if exists "section images are publicly readable" on storage.objects;
+create policy "section images are publicly readable"
+  on storage.objects for select
+  using ( bucket_id = 'section-images' );
+
+
 -- ---------- 4. RATINGS (real "user satisfaction" %) ----------
 create table if not exists public.ratings (
   id uuid default gen_random_uuid() primary key,
@@ -233,6 +268,84 @@ select * from (values
   ('کۆد و وێبسایت',    'ئامراز بۆ کۆدنووسی و دروستکردنی وێبسایت', 'code', '#',                     '#6B6321', 'code',    8, true)
 ) as seed(title, description, icon, link, color, card_style, sort_order, is_visible)
 where not exists (select 1 from public.site_sections);
+
+-- the "games" card should point at the dedicated games page
+update public.site_sections
+set link = 'games.html'
+where card_style = 'games' and (link = '#' or link is null or link = '');
+
+
+-- ---------- 5. GAMES (uploaded as .zip, played inside the site) ----------
+create table if not exists public.games (
+  id uuid default gen_random_uuid() primary key,
+  title text not null,
+  description text,
+  image_url text,
+  entry_url text not null,   -- public URL to the game's index.html
+  folder_path text,          -- storage prefix, so we can delete all its files later
+  sort_order int default 0,
+  is_visible boolean default true,
+  created_at timestamptz default now(),
+  created_by uuid references auth.users
+);
+alter table public.games enable row level security;
+
+drop policy if exists "visible games are viewable by everyone" on public.games;
+create policy "visible games are viewable by everyone"
+  on public.games for select
+  using (
+    is_visible = true
+    or exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'owner')
+  );
+
+drop policy if exists "owner can insert games" on public.games;
+create policy "owner can insert games"
+  on public.games for insert
+  with check ( exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'owner') );
+
+drop policy if exists "owner can update games" on public.games;
+create policy "owner can update games"
+  on public.games for update
+  using ( exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'owner') );
+
+drop policy if exists "owner can delete games" on public.games;
+create policy "owner can delete games"
+  on public.games for delete
+  using ( exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'owner') );
+
+-- storage: the extracted HTML5 game files (many files per game)
+insert into storage.buckets (id, name, public)
+values ('games', 'games', true)
+on conflict (id) do nothing;
+
+drop policy if exists "owner can upload game files" on storage.objects;
+create policy "owner can upload game files"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'games'
+    and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'owner')
+  );
+
+drop policy if exists "owner can update game files" on storage.objects;
+create policy "owner can update game files"
+  on storage.objects for update
+  using (
+    bucket_id = 'games'
+    and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'owner')
+  );
+
+drop policy if exists "owner can delete game files" on storage.objects;
+create policy "owner can delete game files"
+  on storage.objects for delete
+  using (
+    bucket_id = 'games'
+    and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'owner')
+  );
+
+drop policy if exists "game files are publicly readable" on storage.objects;
+create policy "game files are publicly readable"
+  on storage.objects for select
+  using ( bucket_id = 'games' );
 
 
 -- ============================================================
