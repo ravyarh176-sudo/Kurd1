@@ -121,7 +121,9 @@
     } catch (e) { /* profile row may not exist yet on the very first redirect */ }
 
     if (profile && profile.full_name) {
-      playWelcomeAndGo(profile.full_name);
+      // Returning visitor who already has a name saved — no need to show
+      // the welcome flash again, just go straight in.
+      window.location.href = 'services.html';
     } else {
       showStep('stepName');
     }
