@@ -28,19 +28,41 @@ window.addEventListener('kurdtech:ready', async () => {
   let selectedStyle = 'games';
   let selectedColor = '#4B3A93';
 
-  // ---------------- Top-level tabs: Users / Sections ----------------
-  $('topTabUsers').addEventListener('click', () => {
-    $('topTabUsers').classList.add('active');
-    $('topTabSections').classList.remove('active');
-    $('usersPanel').hidden = false;
-    $('sectionsPanel').hidden = true;
+  // ---------------- Section image: upload + drag/zoom crop editor ----------------
+  const photo = createPhotoCropEditor({
+    frameId: 'sectionPhotoFrame', canvasId: 'sectionPhotoCanvas',
+    placeholderId: 'sectionPhotoPlaceholder', removeBtnId: 'sectionPhotoRemove',
+    fileInputId: 'sfImageFile', zoomSliderId: 'sfImageZoom', urlInputId: 'sfImage'
   });
-  $('topTabSections').addEventListener('click', () => {
-    $('topTabSections').classList.add('active');
-    $('topTabUsers').classList.remove('active');
-    $('sectionsPanel').hidden = false;
-    $('usersPanel').hidden = true;
-    if (!sections.length) loadSections();
+
+  // uploads the cropped canvas image to Supabase Storage, returns its public URL
+  async function uploadSectionImage() {
+    const blob = await photo.toBlob();
+    const fileName = `section-${Date.now()}.jpg`;
+    const { error } = await supabase.storage.from('section-images').upload(fileName, blob, {
+      contentType: 'image/jpeg',
+      upsert: false
+    });
+    if (error) throw error;
+    const { data } = supabase.storage.from('section-images').getPublicUrl(fileName);
+    return data.publicUrl;
+  }
+
+  // ---------------- Top-level tabs: Users / Sections / Games ----------------
+  const TABS = [
+    { btn: 'topTabUsers', panel: 'usersPanel' },
+    { btn: 'topTabSections', panel: 'sectionsPanel' },
+    { btn: 'topTabGames', panel: 'gamesPanel' }
+  ];
+  TABS.forEach(t => {
+    $(t.btn).addEventListener('click', () => {
+      TABS.forEach(other => {
+        $(other.btn).classList.toggle('active', other.btn === t.btn);
+        $(other.panel).hidden = other.btn !== t.btn;
+      });
+      if (t.panel === 'sectionsPanel' && !sections.length) loadSections();
+      if (t.panel === 'gamesPanel') window.dispatchEvent(new Event('kurdtech:games-tab-open'));
+    });
   });
 
   // ---------------- Load + render the list ----------------
@@ -164,12 +186,16 @@ window.addEventListener('kurdtech:ready', async () => {
     $('sfTitle').value = section ? section.title : '';
     $('sfDescription').value = section ? (section.description || '') : '';
     $('sfLink').value = section ? (section.link || '') : '';
-    $('sfImage').value = section ? (section.image_url || '') : '';
     $('sfVisible').checked = section ? !!section.is_visible : true;
     selectedIcon = section ? (section.icon || 'star') : 'star';
     selectedStyle = section ? (section.card_style || 'games') : 'games';
     selectedColor = section ? (section.color || '#4B3A93') : '#4B3A93';
     refreshPickerSelection();
+    if (photo) {
+      photo.reset();
+      if (section && section.image_url) photo.loadFromUrl(section.image_url);
+    }
+    $('sfImage').value = section ? (section.image_url || '') : '';
     $('sectionFormOverlay').classList.add('open');
   }
   function closeForm() { $('sectionFormOverlay').classList.remove('open'); }
@@ -186,22 +212,29 @@ window.addEventListener('kurdtech:ready', async () => {
     const title = $('sfTitle').value.trim();
     if (!title) { alert('تکایە ناوی بەشەکە بنووسە.'); return; }
 
-    const payload = {
-      title,
-      description: $('sfDescription').value.trim(),
-      link: $('sfLink').value.trim() || '#',
-      image_url: $('sfImage').value.trim(),
-      icon: selectedIcon,
-      card_style: selectedStyle,
-      color: selectedColor,
-      is_visible: $('sfVisible').checked
-    };
-
     const btn = $('sectionSaveBtn');
     btn.disabled = true;
     btn.textContent = '...چاوەڕوان بە';
 
     try {
+      // if the owner picked/cropped a new photo, upload it and use that
+      // URL; otherwise fall back to whatever's typed in the URL field.
+      let imageUrl = $('sfImage').value.trim();
+      if (photo && photo.hasImage() && photo.wasEdited()) {
+        imageUrl = await uploadSectionImage();
+      }
+
+      const payload = {
+        title,
+        description: $('sfDescription').value.trim(),
+        link: $('sfLink').value.trim() || '#',
+        image_url: imageUrl,
+        icon: selectedIcon,
+        card_style: selectedStyle,
+        color: selectedColor,
+        is_visible: $('sfVisible').checked
+      };
+
       if (editingId) {
         const { error } = await supabase.from('site_sections').update(payload).eq('id', editingId);
         if (error) throw error;
