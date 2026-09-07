@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>یاری و یاریگەکان | Kurd Technology</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="games.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="theme.js"></script>
+</head>
+<body>
+
+  <div class="games-bg"></div>
+
+  <header class="games-top no-print">
+    <a class="games-back" href="services.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5l7 7-7 7M21 12H3"></path></svg>
+    </a>
+    <div class="games-title">
+      <span>🎮 یاری و یاریگەکان</span>
+      <small>یاری خۆش بۆ کاتی بەتاڵی</small>
+    </div>
+    <button class="icon-btn" id="themeBtn" aria-label="theme" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
+    </button>
+  </header>
+
+  <main class="games-wrap">
+    <div class="games-grid" id="gamesGrid">
+      <div class="games-loading" id="gamesLoading">...بارکردن</div>
+    </div>
+  </main>
+
+  <!-- ============ Game player ============ -->
+  <div class="game-player" id="gamePlayer">
+    <div class="game-player-top">
+      <button type="button" class="game-close" id="gamePlayerClose">✕ داخستن</button>
+      <span class="game-player-title" id="gamePlayerTitle"></span>
+    </div>
+    <iframe id="gamePlayerFrame" class="game-player-frame" sandbox="allow-scripts allow-same-origin allow-pointer-lock" allow="fullscreen; autoplay; gamepad"></iframe>
+  </div>
+
+  <script src="guard.js"></script>
+  <script src="games-render.js"></script>
+</body>
+</html>

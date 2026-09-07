@@ -1,0 +1,149 @@
+:root{
+  --gold:#F5B800;
+  --g-red:#E63946;
+  --g-blue:#3B82F6;
+  --ink:#0A0710;
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+html{ -webkit-text-size-adjust:100%; }
+
+body{
+  font-family:'Vazirmatn', sans-serif;
+  background:var(--ink);
+  color:#fff;
+  overflow-x:hidden;
+}
+a{ color:inherit; text-decoration:none; }
+
+/* ---------- Background ----------
+   Kurdistan Gaming artwork, 9:16, supplied by the owner. */
+.games-bg{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  background: url('games-bg.png') center / cover no-repeat, var(--ink);
+}
+.games-bg::before{
+  content:"";
+  position:absolute; inset:0;
+  background:
+    linear-gradient(180deg, rgba(6,4,10,.25) 0%, rgba(6,4,10,.55) 55%, rgba(6,4,10,.92) 100%);
+}
+.games-bg::after{
+  content:"";
+  position:absolute; inset:0;
+  background-image: radial-gradient(rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 30%, transparent 85%);
+}
+
+/* ---------- Top bar ---------- */
+.games-top{
+  position:sticky; top:0; z-index:20;
+  display:flex; align-items:center; gap:12px;
+  padding:14px 16px;
+  background: rgba(15,8,20,.42);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+.games-back{
+  width:34px; height:34px; border-radius:50%; flex-shrink:0;
+  background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
+  display:flex; align-items:center; justify-content:center;
+  transform:scaleX(-1);
+}
+.games-back svg{ width:16px; height:16px; }
+.games-title{ flex:1; display:flex; flex-direction:column; }
+.games-title span{ font-family:'Noto Kufi Arabic', sans-serif; font-weight:700; font-size:14px; }
+.games-title small{ font-size:10px; color:rgba(255,255,255,.5); margin-top:1px; }
+.icon-btn{
+  width:34px; height:34px; border-radius:50%; flex-shrink:0;
+  background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:#fff;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.icon-btn svg{ width:15px; height:15px; }
+
+/* ---------- Grid ---------- */
+.games-wrap{ position:relative; z-index:2; padding:18px 14px 34px; max-width:520px; margin:0 auto; }
+.games-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:9px; }
+.games-loading, .games-empty{
+  grid-column:1/-1; text-align:center; padding:36px 10px; color:rgba(255,255,255,.45); font-size:12.5px;
+}
+
+/* ---------- Glass game card ---------- */
+.game-card{
+  position:relative;
+  border-radius:18px;
+  overflow:hidden;
+  cursor:pointer;
+  background: rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.18);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: 0 12px 30px -14px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.15);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.game-card::before{
+  content:"";
+  position:absolute; inset:0;
+  border-radius:18px;
+  padding:1px;
+  background: linear-gradient(135deg, rgba(230,57,70,.6), transparent 40%, transparent 60%, rgba(59,130,246,.6));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events:none;
+}
+.game-card:active{ transform:scale(.97); }
+.game-card-image{
+  width:100%; aspect-ratio:1/1;
+  background-size:cover; background-position:center;
+  background-color: rgba(255,255,255,.05);
+  position:relative;
+}
+.game-card-image::after{
+  content:"";
+  position:absolute; inset:0;
+  background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.75) 100%);
+}
+.game-card-play{
+  position:absolute; bottom:6px; left:6px; z-index:1;
+  display:flex; align-items:center; gap:3px;
+  background: linear-gradient(135deg, var(--g-red), var(--g-blue));
+  color:#fff; font-size:8.5px; font-weight:700;
+  padding:4px 7px; border-radius:999px;
+}
+.game-card-play svg{ width:8px; height:8px; }
+.game-card-body{ padding:7px 8px 9px; }
+.game-card-title{
+  font-family:'Noto Kufi Arabic', sans-serif; font-weight:700; font-size:10.5px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.game-card-desc{
+  margin-top:3px; font-size:9px; color:rgba(255,255,255,.55);
+  display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden;
+}
+
+/* ---------- Player overlay ---------- */
+.game-player{
+  position:fixed; inset:0; z-index:50;
+  background:#000;
+  display:none;
+  flex-direction:column;
+}
+.game-player.open{ display:flex; }
+.game-player-top{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 14px;
+  background: linear-gradient(90deg, rgba(230,57,70,.25), rgba(59,130,246,.25));
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+.game-close{
+  border:1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.08);
+  color:#fff; font-size:11.5px; font-weight:600; padding:7px 13px; border-radius:999px; cursor:pointer;
+}
+.game-player-title{ font-family:'Noto Kufi Arabic', sans-serif; font-weight:700; font-size:12.5px; }
+.game-player-frame{ flex:1; width:100%; border:none; background:#000; }
