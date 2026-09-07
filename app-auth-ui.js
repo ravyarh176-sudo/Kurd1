@@ -6,9 +6,6 @@ window.addEventListener('kurdtech:ready', async () => {
   const supabase = window.kurdtechSupabase;
   const profile = window.kurdtechProfile;
 
-  const nameEl = document.getElementById('userNameText');
-  if (nameEl && profile && profile.full_name) nameEl.textContent = profile.full_name;
-
   const userChip = document.getElementById('userChip');
   if (userChip) {
     userChip.addEventListener('click', async (e) => {
