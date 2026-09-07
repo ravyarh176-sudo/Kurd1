@@ -432,6 +432,27 @@ button{ font-family:inherit; }
   grid-template-columns:1fr 1fr;
   gap:10px;
 }
+.cards-loading, .cards-empty{
+  grid-column: 1 / -1;
+  text-align:center;
+  padding:30px 10px;
+  color:rgba(255,255,255,.4);
+  font-size:12.5px;
+}
+.cards-retry{
+  display:inline-block;
+  margin-top:8px;
+  border:1px solid rgba(253,186,18,.4);
+  background: rgba(253,186,18,.1);
+  color: var(--gold);
+  font-size:11.5px;
+  font-weight:600;
+  padding:6px 14px;
+  border-radius:999px;
+  cursor:pointer;
+}
+html[data-theme="light"] .cards-loading,
+html[data-theme="light"] .cards-empty{ color:var(--text-mute); }
 
 .cat-card{
   position:relative;
@@ -491,6 +512,20 @@ button{ font-family:inherit; }
   box-shadow:0 6px 16px -4px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25);
 }
 .cat-icon svg{ width:18px; height:18px; }
+
+/* Heart-shaped thumbnail — shown instead of the plain icon once the
+   owner attaches a photo to a section, for a distinctive premium look. */
+.cat-heart-photo{
+  width:64px; height:64px;
+  background-size:cover;
+  background-position:center;
+  background-color: rgba(255,255,255,.1);
+  clip-path: url(#kurdtechHeart);
+  position:relative; z-index:1;
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,.4));
+  transition: transform .2s ease;
+}
+.cat-card:active .cat-heart-photo{ transform: scale(1.06); }
 
 .cat-go{
   display:inline-flex;
