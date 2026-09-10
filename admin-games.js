@@ -12,7 +12,7 @@ window.addEventListener('kurdtech:ready', async () => {
 
   let games = [];
   let editingId = null;
-  let pendingZip = null;      // { files: Map<path, Blob>, entryPath: string } — parsed, not yet uploaded
+  let pendingUpload = null;      // { files: Map<path, Blob>, entryPath: string } — parsed, not yet uploaded
   let loadedOnce = false;
 
   window.addEventListener('kurdtech:games-tab-open', () => {
@@ -80,10 +80,21 @@ window.addEventListener('kurdtech:ready', async () => {
     return supabase.storage.from('section-images').getPublicUrl(fileName).data.publicUrl;
   }
 
-  // ---------------- ZIP handling ----------------
+  // ---------------- Game file handling: .zip (multi-file) or any single file ----------------
   $('gfZipFile').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    const isZip = /\.zip$/i.test(file.name) || /zip/i.test(file.type);
+
+    if (!isZip) {
+      // Any other file type: upload it as-is, no extraction needed.
+      // Clicking the game later just opens this file directly.
+      pendingUpload = { mode: 'single', file };
+      $('gfZipLabel').textContent = `✓ ${file.name}`;
+      return;
+    }
+
     $('gfZipLabel').textContent = '...هەڵسەنگاندنی فایل';
     try {
       const zip = await JSZip.loadAsync(file);
@@ -93,7 +104,7 @@ window.addEventListener('kurdtech:ready', async () => {
       const htmlCandidates = paths.filter(p => /(^|\/)index\.html$/i.test(p));
       if (!htmlCandidates.length) {
         alert('ئەم فایلە ZIPـە هیچ index.html ـی تێدا نییە.');
-        $('gfZipLabel').textContent = 'فایلی ZIPی یاری هەڵبژێرە';
+        $('gfZipLabel').textContent = 'فایلی یاری هەڵبژێرە';
         return;
       }
       htmlCandidates.sort((a, b) => a.split('/').length - b.split('/').length);
@@ -104,23 +115,39 @@ window.addEventListener('kurdtech:ready', async () => {
         const blob = await zip.files[p].async('blob');
         files.set(p, blob);
       }
-      pendingZip = { files, entryPath, fileCount: paths.length };
+      pendingUpload = { mode: 'zip', files, entryPath, fileCount: paths.length };
       $('gfZipLabel').textContent = `✓ ${file.name} (${paths.length} فایل ئامادەیە)`;
     } catch (err) {
-      alert('نەتوانرا فایلی ZIP بخوێنرێتەوە.');
-      $('gfZipLabel').textContent = 'فایلی ZIPی یاری هەڵبژێرە';
+      alert('نەتوانرا فایلەکە بخوێنرێتەوە.');
+      $('gfZipLabel').textContent = 'فایلی یاری هەڵبژێرە';
       console.error(err);
     }
   });
 
-  async function uploadPendingZip(gameId) {
+  async function uploadPendingGameFile(gameId) {
     const folder = `games/${gameId}`;
-    const total = pendingZip.files.size;
-    let done = 0;
     const progress = $('gameUploadProgress');
+
+    if (pendingUpload.mode === 'single') {
+      progress.hidden = false;
+      progress.textContent = '...بارکردنی فایل';
+      const file = pendingUpload.file;
+      const contentType = file.type || guessContentType(file.name);
+      const { error } = await supabase.storage
+        .from('games')
+        .upload(`${folder}/${file.name}`, file, { contentType, upsert: true });
+      progress.hidden = true;
+      if (error) throw error;
+      const { data } = supabase.storage.from('games').getPublicUrl(`${folder}/${file.name}`);
+      return { entryUrl: data.publicUrl, folderPath: folder };
+    }
+
+    // mode === 'zip'
+    const total = pendingUpload.files.size;
+    let done = 0;
     progress.hidden = false;
 
-    for (const [path, blob] of pendingZip.files) {
+    for (const [path, blob] of pendingUpload.files) {
       const contentType = guessContentType(path);
       const { error } = await supabase.storage
         .from('games')
@@ -131,7 +158,7 @@ window.addEventListener('kurdtech:ready', async () => {
     }
     progress.hidden = true;
 
-    const { data } = supabase.storage.from('games').getPublicUrl(`${folder}/${pendingZip.entryPath}`);
+    const { data } = supabase.storage.from('games').getPublicUrl(`${folder}/${pendingUpload.entryPath}`);
     return { entryUrl: data.publicUrl, folderPath: folder };
   }
 
@@ -155,8 +182,8 @@ window.addEventListener('kurdtech:ready', async () => {
     $('gfDescription').value = game ? (game.description || '') : '';
     $('gfVisible').checked = game ? !!game.is_visible : true;
     $('gfZipFile').value = '';
-    $('gfZipLabel').textContent = game ? 'فایلی نوێی ZIP هەڵبژێرە (ئارەزوومەندانە)' : 'فایلی ZIPی یاری هەڵبژێرە';
-    pendingZip = null;
+    $('gfZipLabel').textContent = game ? 'فایلی نوێ هەڵبژێرە (ئارەزوومەندانە)' : 'فایلی یاری هەڵبژێرە';
+    pendingUpload = null;
     if (photo) {
       photo.reset();
       if (game && game.image_url) photo.loadFromUrl(game.image_url);
@@ -173,7 +200,7 @@ window.addEventListener('kurdtech:ready', async () => {
   $('gameSaveBtn').addEventListener('click', async () => {
     const title = $('gfTitle').value.trim();
     if (!title) { alert('تکایە ناوی یارییەکە بنووسە.'); return; }
-    if (!editingId && !pendingZip) { alert('تکایە فایلی ZIPی یارییەکە هەڵبژێرە.'); return; }
+    if (!editingId && !pendingUpload) { alert('تکایە فایلی یارییەکە هەڵبژێرە.'); return; }
 
     const btn = $('gameSaveBtn');
     btn.disabled = true;
@@ -193,8 +220,8 @@ window.addEventListener('kurdtech:ready', async () => {
       };
 
       if (editingId) {
-        if (pendingZip) {
-          const { entryUrl, folderPath } = await uploadPendingZip(editingId);
+        if (pendingUpload) {
+          const { entryUrl, folderPath } = await uploadPendingGameFile(editingId);
           payload.entry_url = entryUrl;
           payload.folder_path = folderPath;
         }
@@ -207,7 +234,7 @@ window.addEventListener('kurdtech:ready', async () => {
           .select().single();
         if (error) throw error;
 
-        const { entryUrl, folderPath } = await uploadPendingZip(inserted.id);
+        const { entryUrl, folderPath } = await uploadPendingGameFile(inserted.id);
         const { error: updateErr } = await supabase.from('games')
           .update({ entry_url: entryUrl, folder_path: folderPath })
           .eq('id', inserted.id);
