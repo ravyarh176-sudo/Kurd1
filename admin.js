@@ -1,134 +1,92 @@
-// Kurd Technology — admin dashboard (owner only).
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>پانێڵی بەڕێوەبردن | Kurd Technology</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
 
-window.addEventListener('kurdtech:ready', async () => {
-  const supabase = window.kurdtechSupabase;
-  const me = window.kurdtechUser;
-  const myProfile = window.kurdtechProfile;
+  <div class="bg"></div>
 
-  if (!myProfile || myProfile.role !== 'owner') {
-    window.location.href = 'services.html';
-    return;
-  }
+  <!-- Top bar -->
+  <header class="topbar">
+    <a href="services.html" class="brand">
+      <div class="back-arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <span class="brand-title">Kurd Technology</span>
+    </a>
+    <span class="owner-pill">پانێڵی سەرۆک</span>
+  </header>
 
-  const $ = (id) => document.getElementById(id);
-  let allUsers = [];
-  let activeUser = null;
+  <!-- Main Wrap -->
+  <main class="wrap">
 
-  function initials(name) {
-    return (name || '؟').trim().charAt(0).toUpperCase();
-  }
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <b id="kpiTotalUsers">0</b>
+        <span>سەرجەم بەکارهێنەران</span>
+      </div>
+      <div class="stat-box">
+        <b id="kpiAdmins" style="color: #4ADE80;">0</b>
+        <span>بەڕێوەبەران</span>
+      </div>
+      <div class="stat-box">
+        <b id="kpiBanned" style="color: #FF6B7A;">0</b>
+        <span>بەندکراوەکان</span>
+      </div>
+    </div>
 
-  async function loadUsers() {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, full_name, role, banned, ban_reason, created_at')
-      .order('created_at', { ascending: false });
+    <!-- User List -->
+    <div class="section-title">بەکارهێنەرانی سیستم</div>
+    <div class="user-list" id="usersList">
+      <div class="loading-hint">باردەکرێت...</div>
+    </div>
 
-    if (error) {
-      $('userList').innerHTML = `<div class="loading-hint">نەتوانرا بەکارهێنەران بار بکرێن</div>`;
-      return;
-    }
+  </main>
 
-    allUsers = data || [];
-    renderStats();
-    renderList();
-  }
+  <!-- User Detail Sheet Modal -->
+  <div class="admin-overlay" id="userOverlay">
+    <div class="admin-sheet">
+      <button class="admin-close" id="closeSheetBtn">✕</button>
 
-  function renderStats() {
-    $('statTotal').textContent = allUsers.length;
-    $('statBanned').textContent = allUsers.filter(u => u.banned).length;
-    $('statOwners').textContent = allUsers.filter(u => u.role === 'owner').length;
-  }
+      <div class="user-detail-head">
+        <div class="user-detail-avatar" id="sheetAvatar">؟</div>
+        <div class="user-detail-name" id="sheetName">ناو</div>
+        <div class="user-detail-role" id="sheetEmail">ئیمەیڵ</div>
+      </div>
 
-  function renderList() {
-    const list = $('userList');
-    if (!allUsers.length) {
-      list.innerHTML = `<div class="loading-hint">هیچ بەکارهێنەرێک نییە</div>`;
-      return;
-    }
-    list.innerHTML = allUsers.map(u => {
-      const badge = u.role === 'owner'
-        ? '<span class="uc-badge owner">خاوەن</span>'
-        : (u.banned ? '<span class="uc-badge banned">دەرکراو</span>' : '<span class="uc-badge active">چالاک</span>');
-      return `
-        <div class="user-card" data-id="${u.id}">
-          <div class="uc-avatar">${initials(u.full_name)}</div>
-          <div class="uc-info">
-            <div class="uc-name">${(u.full_name || 'بێ ناو')}</div>
-            <div class="uc-sub">${new Date(u.created_at).toLocaleDateString('ar')}</div>
+      <div class="admin-tab-panel">
+        <div class="manage-block">
+          <div class="manage-row">
+            <span>ڕۆڵ:</span>
+            <b id="sheetRoleText">user</b>
           </div>
-          ${badge}
-        </div>`;
-    }).join('');
+          <div class="manage-row">
+            <span>دۆخ:</span>
+            <b id="sheetStatusText">چالاک</b>
+          </div>
+          <div class="manage-row">
+            <span>بەرواری دروستبوون:</span>
+            <span id="sheetCreatedAt" style="font-size:11px; color:rgba(255,255,255,.6);">...</span>
+          </div>
 
-    list.querySelectorAll('.user-card').forEach(card => {
-      card.addEventListener('click', () => openUser(card.dataset.id));
-    });
-  }
+          <button class="btn-ban" id="sheetBanBtn">بەندکردنی بەکارهێنەر</button>
+        </div>
+      </div>
 
-  // ---------- User detail sheet ----------
-  const overlay = $('userSheetOverlay');
-  $('userSheetClose').addEventListener('click', () => overlay.classList.remove('open'));
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
+    </div>
+  </div>
 
-  function openUser(id) {
-    const u = allUsers.find(x => x.id === id);
-    if (!u) return;
-    activeUser = u;
-
-    $('udAvatar').textContent = initials(u.full_name);
-    $('udName').textContent = u.full_name || 'بێ ناو';
-    $('udRole').textContent = u.role === 'owner' ? 'خاوەنی ماڵپەڕ' : 'بەکارهێنەر';
-    $('udStatus').textContent = u.banned ? 'دەرکراوە' : 'چالاکە';
-    $('banReasonInput').value = u.ban_reason || '';
-
-    const banBtn = $('banToggleBtn');
-    if (u.role === 'owner') {
-      banBtn.style.display = 'none';
-    } else {
-      banBtn.style.display = 'block';
-      banBtn.textContent = u.banned ? 'گەڕاندنەوەی هەژمار' : 'دەرکردن لە ماڵپەڕ';
-      banBtn.classList.toggle('is-banned', u.banned);
-    }
-
-    setTab('chat');
-
-    window.KurdChat.mount({
-      container: $('userChatMount'),
-      otherUserId: u.id,
-      otherName: u.full_name || 'بەکارهێنەر'
-    });
-
-    overlay.classList.add('open');
-  }
-
-  function setTab(tab) {
-    document.querySelectorAll('.admin-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-    $('tabChat').hidden = tab !== 'chat';
-    $('tabManage').hidden = tab !== 'manage';
-  }
-  document.querySelectorAll('.admin-tab').forEach(t => {
-    t.addEventListener('click', () => setTab(t.dataset.tab));
-  });
-
-  $('banToggleBtn').addEventListener('click', async () => {
-    if (!activeUser) return;
-    const willBan = !activeUser.banned;
-    const reason = $('banReasonInput').value.trim();
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ banned: willBan, ban_reason: willBan ? (reason || 'پێشێلکردنی یاساکانی ماڵپەڕ') : null })
-      .eq('id', activeUser.id);
-
-    if (error) {
-      alert('نەتوانرا دۆخی بەکارهێنەر بگۆڕدرێت.');
-      return;
-    }
-    activeUser.banned = willBan;
-    await loadUsers();
-    openUser(activeUser.id);
-  });
-
-  loadUsers();
-});
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="guard.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
