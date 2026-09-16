@@ -7,292 +7,82 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
-  
-  <style>
-    /* ستایڵی تایبەت و مسۆگەری ناوخۆیی بۆ ئەوەی هەرگیز تێکنەچێت */
-    body.admin-page-bg {
-      background-color: #0d1117 !important;
-      color: #E2E8F0 !important;
-      font-family: 'Vazirmatn', 'Noto Kufi Arabic', system-ui, sans-serif !important;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      direction: rtl;
-    }
-
-    .admin-wrap-box {
-      max-width: 1080px;
-      margin: 0 auto;
-      padding: 24px 16px 80px;
-    }
-
-    /* Top bar */
-    .admin-header-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 20px;
-      background: rgba(22, 27, 34, 0.9);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(10px);
-    }
-
-    .brand-area {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .brand-title {
-      font-size: 18px;
-      font-weight: 800;
-      color: #FFFFFF;
-    }
-
-    .badge-president {
-      background: rgba(253, 186, 18, 0.15);
-      border: 1px solid #FDBA12;
-      color: #FDBA12;
-      font-size: 12px;
-      font-weight: 700;
-      padding: 3px 10px;
-      border-radius: 20px;
-    }
-
-    .user-pill {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: rgba(255, 255, 255, 0.05);
-      padding: 6px 12px;
-      border-radius: 30px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .nav-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 20px 0 24px;
-    }
-
-    .btn-site-return {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(253, 186, 18, 0.12);
-      border: 1px solid rgba(253, 186, 18, 0.35);
-      color: #FDBA12 !important;
-      padding: 9px 16px;
-      border-radius: 12px;
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 700;
-      transition: all 0.2s ease;
-    }
-
-    .btn-site-return:hover {
-      background: #FDBA12;
-      color: #0d1117 !important;
-    }
-
-    .btn-reload {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: #FFFFFF;
-      padding: 9px 16px;
-      border-radius: 12px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    /* کارتەکانی ئامار */
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
-      margin-bottom: 28px;
-    }
-
-    .summary-box {
-      background: #161B22;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
-      padding: 20px 16px;
-      text-align: center;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-    }
-
-    .summary-num {
-      font-size: 32px;
-      font-weight: 800;
-      color: #FDBA12;
-      line-height: 1.2;
-    }
-
-    .summary-box.green .summary-num { color: #10B981; }
-    .summary-box.red .summary-num { color: #EF4444; }
-
-    .summary-text {
-      color: #94A3B8;
-      font-size: 13px;
-      margin-top: 6px;
-      font-weight: 600;
-    }
-
-    /* خشتەی بەکارهێنەران */
-    .admin-main-card {
-      background: #161B22;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
-    }
-
-    .card-top-section {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 20px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      padding-bottom: 16px;
-    }
-
-    .card-top-section h2 {
-      font-size: 20px;
-      font-weight: 700;
-      color: #FFFFFF;
-      margin: 0;
-    }
-
-    .search-field-input {
-      background: #0d1117;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 10px;
-      padding: 9px 14px;
-      color: #FFFFFF;
-      font-family: inherit;
-      font-size: 14px;
-      min-width: 220px;
-      outline: none;
-    }
-
-    .table-container-scroll {
-      overflow-x: auto;
-    }
-
-    .custom-admin-table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: right;
-      font-size: 14px;
-    }
-
-    .custom-admin-table th {
-      padding: 12px 14px;
-      color: #94A3B8;
-      font-weight: 600;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      white-space: nowrap;
-    }
-
-    .custom-admin-table td {
-      padding: 14px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      color: #E2E8F0;
-    }
-
-    .loading-info {
-      text-align: center;
-      padding: 30px !important;
-      color: #64748B;
-    }
-  </style>
+  <link rel="stylesheet" href="admin.css">
 </head>
-<body class="admin-page-bg">
+<body>
+
+  <div class="bg"></div>
 
   <!-- Top bar -->
-  <header class="admin-header-bar">
-    <div class="brand-area">
-      <span style="font-size: 20px;">☀️</span>
-      <span class="brand-title">Kurd Technology</span>
-      <span class="badge-president">پانێڵی سەرۆک</span>
-    </div>
-    <div class="user-pill">
-      <div style="width: 28px; height: 28px; border-radius: 50%; background: #FDBA12; color: #000; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px;" id="avatarLetter">؟</div>
-      <div style="display: flex; flex-direction: column;">
-        <span style="font-size: 13px; font-weight: 700; color: #fff;" id="adminName">بەڕێوەبەر</span>
-        <span style="font-size: 11px; color: #94A3B8;" id="adminRole">سەرۆک</span>
+  <header class="topbar">
+    <a href="services.html" class="brand">
+      <div class="back-arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
-      <button id="logoutBtn" style="background: none; border: none; color: #94A3B8; cursor: pointer; padding: 4px; display: flex; align-items: center;" title="چوونەدەرەوە">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      </button>
-    </div>
+      <span class="brand-title">Kurd Technology</span>
+    </a>
+    <span class="owner-pill">پانێڵی سەرۆک</span>
   </header>
 
-  <main class="admin-wrap-box">
+  <!-- Main Wrap -->
+  <main class="wrap">
 
-    <div class="nav-row">
-      <a href="services.html" class="btn-site-return">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-        <span>گەڕانەوە بۆ خزمەتگوزارییەکان</span>
-      </a>
-      <button class="btn-reload" id="refreshUsersBtn">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-        <span>نوێکردنەوە</span>
-      </button>
-    </div>
-
-    <!-- ئامارەکان -->
-    <div class="summary-grid">
-      <div class="summary-box">
-        <div class="summary-num" id="kpiTotalUsers">0</div>
-        <div class="summary-text">سەرجەم بەکارهێنەران</div>
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <b id="kpiTotalUsers">0</b>
+        <span>سەرجەم بەکارهێنەران</span>
       </div>
-      <div class="summary-box green">
-        <div class="summary-num" id="kpiAdmins">0</div>
-        <div class="summary-text">بەڕێوەبەران</div>
+      <div class="stat-box">
+        <b id="kpiAdmins" style="color: #4ADE80;">0</b>
+        <span>بەڕێوەبەران</span>
       </div>
-      <div class="summary-box red">
-        <div class="summary-num" id="kpiBanned">0</div>
-        <div class="summary-text">بەندکراوەکان</div>
+      <div class="stat-box">
+        <b id="kpiBanned" style="color: #FF6B7A;">0</b>
+        <span>بەندکراوەکان</span>
       </div>
     </div>
 
-    <!-- خشتەی بەکارهێنەران -->
-    <div class="admin-main-card">
-      <div class="card-top-section">
-        <h2>بەکارهێنەرانی سیستم</h2>
-        <input type="text" id="userSearch" class="search-field-input" placeholder="گەڕان بەپێی ناو یان ئیمەیڵ...">
-      </div>
-
-      <div class="table-container-scroll">
-        <table class="custom-admin-table">
-          <thead>
-            <tr>
-              <th>بەکارهێنەر</th>
-              <th>ڕۆڵ</th>
-              <th>دۆخ</th>
-              <th>بەرواری دروستبوون</th>
-              <th>کردارەکان</th>
-            </tr>
-          </thead>
-          <tbody id="usersTbody">
-            <tr><td colspan="5" class="loading-info">باردەکرێت...</td></tr>
-          </tbody>
-        </table>
-      </div>
+    <!-- User List -->
+    <div class="section-title">بەکارهێنەرانی سیستم</div>
+    <div class="user-list" id="usersList">
+      <div class="loading-hint">باردەکرێت...</div>
     </div>
 
   </main>
+
+  <!-- User Detail Sheet Modal -->
+  <div class="admin-overlay" id="userOverlay">
+    <div class="admin-sheet">
+      <button class="admin-close" id="closeSheetBtn">✕</button>
+
+      <div class="user-detail-head">
+        <div class="user-detail-avatar" id="sheetAvatar">؟</div>
+        <div class="user-detail-name" id="sheetName">ناو</div>
+        <div class="user-detail-role" id="sheetEmail">ئیمەیڵ</div>
+      </div>
+
+      <div class="admin-tab-panel">
+        <div class="manage-block">
+          <div class="manage-row">
+            <span>ڕۆڵ:</span>
+            <b id="sheetRoleText">user</b>
+          </div>
+          <div class="manage-row">
+            <span>دۆخ:</span>
+            <b id="sheetStatusText">چالاک</b>
+          </div>
+          <div class="manage-row">
+            <span>بەرواری دروستبوون:</span>
+            <span id="sheetCreatedAt" style="font-size:11px; color:rgba(255,255,255,.6);">...</span>
+          </div>
+
+          <button class="btn-ban" id="sheetBanBtn">بەندکردنی بەکارهێنەر</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
