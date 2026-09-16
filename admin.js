@@ -1,4 +1,4 @@
-// Kurd Technology — admin dashboard (owner only).
+// Kurd Technology — admin dashboard (owner only) + Chat & Voice.
 
 window.addEventListener('kurdtech:ready', async () => {
   const supabase = window.kurdtechSupabase;
@@ -73,7 +73,18 @@ window.addEventListener('kurdtech:ready', async () => {
     });
   }
 
-  // ---------- User detail sheet ----------
+  // ---------- تابی چات و بەڕێوەبردن ----------
+  function setTab(tab) {
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    if ($('tabChat')) $('tabChat').hidden = tab !== 'chat';
+    if ($('tabManage')) $('tabManage').hidden = tab !== 'manage';
+  }
+
+  document.querySelectorAll('.admin-tab').forEach(t => {
+    t.addEventListener('click', () => setTab(t.dataset.tab));
+  });
+
+  // ---------- پەنجەرەی بەکارهێنەر ----------
   const overlay = $('userSheetOverlay');
   const closeBtn = $('userSheetClose');
   
@@ -104,6 +115,17 @@ window.addEventListener('kurdtech:ready', async () => {
         banBtn.textContent = u.banned ? 'گەڕاندنەوەی هەژمار' : 'دەرکردن لە ماڵپەڕ';
         banBtn.classList.toggle('is-banned', u.banned);
       }
+    }
+
+    setTab('chat');
+
+    // گرێدانی چات و دەنگ
+    if (window.KurdChat && typeof window.KurdChat.mount === 'function') {
+      window.KurdChat.mount({
+        container: $('userChatMount'),
+        otherUserId: u.id,
+        otherName: u.full_name || 'بەکارهێنەر'
+      });
     }
 
     if (overlay) overlay.classList.add('open');
