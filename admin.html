@@ -1,28 +1,30 @@
 <!DOCTYPE html>
 <html lang="ckb" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>پانێڵی بەڕێوەبردن | Kurd Technology</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="admin.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>پانێڵی بەڕێوەبردن | Kurd Technology</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="services-page admin-page">
 
-  <!-- Top bar -->
+  <div class="glow-orb orb-1"></div>
+  <div class="glow-orb orb-2"></div>
+
   <header class="topbar">
     <div class="brand">
       <span class="sun">☀️</span>
       <span class="logo">Kurd Technology</span>
+      <span class="badge-role badge-admin">پانێڵی سەرۆک</span>
     </div>
     <div class="user-chip">
       <div class="avatar" id="avatarLetter">؟</div>
       <div class="uinfo">
         <span class="uname" id="adminName">بەڕێوەبەر</span>
-        <span class="urole" id="adminRole">...</span>
+        <span class="urole" id="adminRole">سەرۆک</span>
       </div>
       <button class="btn-logout" id="logoutBtn" title="چوونەدەرەوە">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -30,48 +32,46 @@
     </div>
   </header>
 
-  <!-- Navigation back to main site -->
-  <div class="admin-nav-back">
-    <a href="services.html" class="nav-back-link">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-      <span>گەڕانەوە بۆ پەڕەی سەرەکی</span>
-    </a>
-  </div>
+  <main class="page-container admin-wrap">
 
-  <!-- Main container -->
-  <main class="admin-wrap">
+    <div class="admin-top-actions">
+      <a href="services.html" class="btn-back">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>گەڕانەوە بۆ خزمەتگوزارییەکان</span>
+      </a>
+      <button class="btn-secondary" id="refreshUsersBtn">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        <span>نوێکردنەوە</span>
+      </button>
+    </div>
 
-    <!-- KPI / Summary Cards -->
-    <section class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-num" id="kpiTotalUsers">0</div>
-        <div class="kpi-label">سەرجەم بەکارهێنەران</div>
+    <!-- ئامارەکان -->
+    <div class="admin-stats-grid">
+      <div class="stat-box">
+        <div class="stat-val" id="kpiTotalUsers">0</div>
+        <div class="stat-lbl">سەرجەم بەکارهێنەران</div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-num" id="kpiAdmins">0</div>
-        <div class="kpi-label">بەڕێوەبەران</div>
+      <div class="stat-box">
+        <div class="stat-val text-green" id="kpiAdmins">0</div>
+        <div class="stat-lbl">بەڕێوەبەران</div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-num" id="kpiBanned">0</div>
-        <div class="kpi-label">بەندکراوەکان</div>
+      <div class="stat-box">
+        <div class="stat-val text-red" id="kpiBanned">0</div>
+        <div class="stat-lbl">بەندکراوەکان</div>
       </div>
-    </section>
+    </div>
 
-    <!-- Users Table Card -->
-    <section class="admin-card">
-      <div class="card-head">
+    <!-- خشتەی بەکارهێنەران -->
+    <div class="service-card admin-table-card">
+      <div class="table-header-row">
         <h2>بەکارهێنەرانی سیستم</h2>
-        <div class="card-actions">
-          <input type="text" id="userSearch" class="search-input" placeholder="گەڕان بەپێی ناو یان ئیمەیڵ...">
-          <button class="btn-refresh" id="refreshUsersBtn">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-            <span>نوێکردنەوە</span>
-          </button>
+        <div class="search-box">
+          <input type="text" id="userSearch" placeholder="گەڕان بەپێی ناو یان ئیمەیڵ...">
         </div>
       </div>
 
-      <div class="table-wrap">
-        <table class="users-table">
+      <div class="table-responsive">
+        <table class="data-table">
           <thead>
             <tr>
               <th>بەکارهێنەر</th>
@@ -82,11 +82,11 @@
             </tr>
           </thead>
           <tbody id="usersTbody">
-            <tr><td colspan="5" class="loading-td">باردەکرێت...</td></tr>
+            <tr><td colspan="5" class="text-center text-muted">باردەکرێت...</td></tr>
           </tbody>
         </table>
       </div>
-    </section>
+    </div>
 
   </main>
 
