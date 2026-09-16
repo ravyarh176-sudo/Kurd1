@@ -1,92 +1,203 @@
-<!DOCTYPE html>
-<html lang="ckb" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>پانێڵی بەڕێوەبردن | Kurd Technology</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="admin.css">
-</head>
-<body>
+// ============================================================
+// ADMIN PANEL JS - خوێندنەوەی دروستی بەکارهێنەران و ئامارەکان
+// ============================================================
 
-  <div class="bg"></div>
+let allUsers = [];
 
-  <!-- Top bar -->
-  <header class="topbar">
-    <a href="services.html" class="brand">
-      <div class="back-arrow">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-      </div>
-      <span class="brand-title">Kurd Technology</span>
-    </a>
-    <span class="owner-pill">پانێڵی سەرۆک</span>
-  </header>
+document.addEventListener('DOMContentLoaded', async () => {
+  // دڵنیابوون لەوەی سەپابەیس هەیە
+  if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+    console.error('Supabase client is missing.');
+    return;
+  }
 
-  <!-- Main Wrap -->
-  <main class="wrap">
+  // وەرگرتنی دۆخی چوونەژوورەوە
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      window.location.href = 'index.html';
+      return;
+    }
+  } catch (e) {
+    console.error(e);
+  }
 
-    <!-- Stats -->
-    <div class="stats-row">
-      <div class="stat-box">
-        <b id="kpiTotalUsers">0</b>
-        <span>سەرجەم بەکارهێنەران</span>
-      </div>
-      <div class="stat-box">
-        <b id="kpiAdmins" style="color: #4ADE80;">0</b>
-        <span>بەڕێوەبەران</span>
-      </div>
-      <div class="stat-box">
-        <b id="kpiBanned" style="color: #FF6B7A;">0</b>
-        <span>بەندکراوەکان</span>
-      </div>
-    </div>
+  // بارکردنی بەکارهێنەران
+  await fetchAndRenderUsers();
 
-    <!-- User List -->
-    <div class="section-title">بەکارهێنەرانی سیستم</div>
-    <div class="user-list" id="usersList">
-      <div class="loading-hint">باردەکرێت...</div>
-    </div>
+  // بەستنەوەی پۆپ ئەپی بەکارهێنەر
+  const closeBtn = document.getElementById('closeSheetBtn');
+  const overlay = document.getElementById('userOverlay');
+  if (closeBtn && overlay) {
+    closeBtn.addEventListener('click', () => overlay.classList.remove('open'));
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.classList.remove('open');
+    });
+  }
+});
 
-  </main>
+async function fetchAndRenderUsers() {
+  const usersListEl = document.getElementById('usersList');
+  const kpiTotal = document.getElementById('kpiTotalUsers');
+  const kpiAdmins = document.getElementById('kpiAdmins');
+  const kpiBanned = document.getElementById('kpiBanned');
 
-  <!-- User Detail Sheet Modal -->
-  <div class="admin-overlay" id="userOverlay">
-    <div class="admin-sheet">
-      <button class="admin-close" id="closeSheetBtn">✕</button>
+  if (usersListEl) {
+    usersListEl.innerHTML = '<div class="loading-hint">باردەکرێت...</div>';
+  }
 
-      <div class="user-detail-head">
-        <div class="user-detail-avatar" id="sheetAvatar">؟</div>
-        <div class="user-detail-name" id="sheetName">ناو</div>
-        <div class="user-detail-role" id="sheetEmail">ئیمەیڵ</div>
-      </div>
+  // ۱. هەوڵدان بۆ هێنان بە شێوازی RPC کە تایبەتە بە ئەدمین لە سیستەمەکەتدا
+  let usersData = null;
+  
+  try {
+    const { data: rpcData, error: rpcErr } = await supabaseClient.rpc('admin_get_all_users');
+    if (!rpcErr && rpcData) {
+      usersData = rpcData;
+    }
+  } catch (e) {
+    console.warn('RPC method failed, falling back to direct table query');
+  }
 
-      <div class="admin-tab-panel">
-        <div class="manage-block">
-          <div class="manage-row">
-            <span>ڕۆڵ:</span>
-            <b id="sheetRoleText">user</b>
-          </div>
-          <div class="manage-row">
-            <span>دۆخ:</span>
-            <b id="sheetStatusText">چالاک</b>
-          </div>
-          <div class="manage-row">
-            <span>بەرواری دروستبوون:</span>
-            <span id="sheetCreatedAt" style="font-size:11px; color:rgba(255,255,255,.6);">...</span>
-          </div>
+  // ۲. ئەگەر RPC نەبوو، ڕاستەوخۆ لە خشتەی profiles دەیهێنین
+  if (!usersData) {
+    const { data: tableData, error: tableErr } = await supabaseClient
+      .from('profiles')
+      .select('*');
 
-          <button class="btn-ban" id="sheetBanBtn">بەندکردنی بەکارهێنەر</button>
+    if (!tableErr && tableData) {
+      usersData = tableData;
+    } else {
+      console.error('Table error:', tableErr);
+    }
+  }
+
+  // ئەگەر بەکارهێنەر نەبوو
+  if (!usersData || usersData.length === 0) {
+    if (usersListEl) {
+      usersListEl.innerHTML = '<div class="loading-hint">هیچ بەکارهێنەرێک نەدۆزرایەوە یان دەسەڵاتی بینین نییە</div>';
+    }
+    if (kpiTotal) kpiTotal.textContent = '0';
+    if (kpiAdmins) kpiAdmins.textContent = '0';
+    if (kpiBanned) kpiBanned.textContent = '0';
+    return;
+  }
+
+  allUsers = usersData;
+
+  // ژماردنی ئامارەکان
+  const total = allUsers.length;
+  let admins = 0;
+  let banned = 0;
+
+  allUsers.forEach(u => {
+    const r = (u.role || '').toLowerCase();
+    if (r === 'admin' || r === 'owner') admins++;
+    if (u.is_banned || u.status === 'banned') banned++;
+  });
+
+  if (kpiTotal) kpiTotal.textContent = total;
+  if (kpiAdmins) kpiAdmins.textContent = admins;
+  if (kpiBanned) kpiBanned.textContent = banned;
+
+  // ڕێزکردنی کارتەکان بە دیزاینە ئەسڵییەکە
+  if (usersListEl) {
+    usersListEl.innerHTML = '';
+
+    allUsers.forEach(user => {
+      const name = user.full_name || user.username || user.name || (user.email ? user.email.split('@')[0] : 'بەکارهێنەر');
+      const email = user.email || 'بێ ئیمەیڵ';
+      const role = (user.role || 'user').toLowerCase();
+      const isBanned = user.is_banned || user.status === 'banned';
+      const initial = name.trim().charAt(0).toUpperCase() || '؟';
+
+      let badgeClass = 'active';
+      let badgeLabel = 'چالاک';
+
+      if (role === 'admin' || role === 'owner') {
+        badgeClass = 'owner';
+        badgeLabel = 'سەرۆک';
+      } else if (isBanned) {
+        badgeClass = 'banned';
+        badgeLabel = 'بەندکراو';
+      }
+
+      const card = document.createElement('div');
+      card.className = 'user-card';
+      card.innerHTML = `
+        <div class="uc-avatar">${initial}</div>
+        <div class="uc-info">
+          <div class="uc-name">${escapeText(name)}</div>
+          <div class="uc-sub">${escapeText(email)}</div>
         </div>
-      </div>
+        <span class="uc-badge ${badgeClass}">${badgeLabel}</span>
+      `;
 
-    </div>
-  </div>
+      card.addEventListener('click', () => showUserSheet(user));
+      usersListEl.appendChild(card);
+    });
+  }
+}
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script>
-  <script src="guard.js"></script>
-  <script src="admin.js"></script>
-</body>
-</html>
+function showUserSheet(user) {
+  const overlay = document.getElementById('userOverlay');
+  if (!overlay) return;
+
+  const name = user.full_name || user.username || user.name || (user.email ? user.email.split('@')[0] : 'بەکارهێنەر');
+  const email = user.email || 'بێ ئیمەیڵ';
+  const role = user.role || 'user';
+  const isBanned = user.is_banned || user.status === 'banned';
+
+  const avatar = document.getElementById('sheetAvatar');
+  const nameEl = document.getElementById('sheetName');
+  const emailEl = document.getElementById('sheetEmail');
+  const roleEl = document.getElementById('sheetRoleText');
+  const statusEl = document.getElementById('sheetStatusText');
+  const dateEl = document.getElementById('sheetCreatedAt');
+  const banBtn = document.getElementById('sheetBanBtn');
+
+  if (avatar) avatar.textContent = name.trim().charAt(0).toUpperCase() || '؟';
+  if (nameEl) nameEl.textContent = name;
+  if (emailEl) emailEl.textContent = email;
+  if (roleEl) roleEl.textContent = role;
+  if (statusEl) statusEl.textContent = isBanned ? 'بەندکراو' : 'چالاک';
+  if (dateEl) dateEl.textContent = user.created_at ? new Date(user.created_at).toLocaleDateString('ckb-IQ') : '---';
+
+  if (banBtn) {
+    banBtn.textContent = isBanned ? 'لابردنی بەندکردن' : 'بەندکردنی بەکارهێنەر';
+    if (isBanned) banBtn.classList.add('is-banned');
+    else banBtn.classList.remove('is-banned');
+
+    banBtn.onclick = async () => {
+      banBtn.disabled = true;
+      banBtn.textContent = 'چاوەڕوان بە...';
+      const targetStatus = !isBanned;
+
+      // هەوڵدان لەگەڵ RPC یان Table
+      let ok = false;
+      try {
+        const { error } = await supabaseClient.rpc('admin_toggle_ban', { target_user_id: user.id });
+        if (!error) ok = true;
+      } catch (e) {}
+
+      if (!ok) {
+        const { error } = await supabaseClient
+          .from('profiles')
+          .update({ is_banned: targetStatus })
+          .eq('id', user.id);
+        if (!error) ok = true;
+      }
+
+      overlay.classList.remove('open');
+      await fetchAndRenderUsers();
+    };
+  }
+
+  overlay.classList.add('open');
+}
+
+function escapeText(str) {
+  if (!str) return '';
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
