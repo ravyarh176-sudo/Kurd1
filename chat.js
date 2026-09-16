@@ -1,5 +1,5 @@
 // ============================================================
-// KURD TECHNOLOGY - MODERN CHAT & VOICE ENGINE (وەک تێلیگرام)
+// KURD TECHNOLOGY - CLEAN WHATSAPP/TELEGRAM VOICE & CHAT
 // ============================================================
 
 window.KurdChat = {
@@ -9,53 +9,53 @@ window.KurdChat = {
     const me = window.kurdtechUser;
 
     if (!supabase || !me) {
-      container.innerHTML = '<div style="padding:20px; color:#EF4444; text-align:center;">کێشەی دەسەڵات هەیە</div>';
+      container.innerHTML = '<div style="padding:15px; color:#EF4444; text-align:center;">کێشەی دەسەڵات هەیە</div>';
       return;
     }
 
     container.innerHTML = `
-      <div class="kc-chat-container">
-        <div class="kc-messages-flow" id="kcMessages">
+      <div class="kc-chat-box">
+        <div class="kc-msg-area" id="kcMsgArea">
           <div style="text-align:center; padding:20px; color:rgba(255,255,255,.4); font-size:12px;">باردەکرێت...</div>
         </div>
 
-        <div class="kc-input-bar">
-          <input type="text" id="kcTextInput" class="kc-text-input" placeholder="نامەیەک بنووسە بۆ ${escapeHtml(otherName)}...">
+        <div class="kc-action-bar">
+          <input type="text" id="kcMsgInput" class="kc-msg-input" placeholder="نامەیەک بنووسە...">
           
-          <button id="kcBtnSend" class="kc-btn-send" title="ناردن">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <button id="kcBtnSend" class="kc-action-btn kc-btn-send-gold" title="ناردن">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
 
-          <button id="kcBtnMic" class="kc-btn-mic" title="تۆمارکردنی دەنگ">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          <button id="kcBtnMic" class="kc-action-btn kc-btn-mic-gold" title="تۆمارکردنی دەنگ">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
           </button>
 
-          <!-- شریتی تۆمارکردن لە کاتی قسەکردندا -->
-          <div class="kc-recording-panel" id="kcRecPanel">
-            <div class="kc-rec-indicator">
-              <div class="kc-rec-dot"></div>
-              <span class="kc-rec-timer" id="kcRecTimer">00:00</span>
+          <!-- کاتی قسەکردن و تۆمارکردن -->
+          <div class="kc-record-popup" id="kcRecPopup">
+            <div class="kc-rec-live">
+              <div class="kc-live-dot"></div>
+              <span class="kc-live-counter" id="kcRecCounter">00:00</span>
             </div>
-            <div style="display:flex; gap:8px;">
-              <button class="kc-rec-cancel" id="kcRecCancel">سڕینەوە ✕</button>
-              <button class="kc-rec-done" id="kcRecDone">ناردنی دەنگ ✓</button>
+            <div style="display:flex; gap:6px;">
+              <button class="kc-rec-discard" id="kcRecDiscard">سڕینەوە ✕</button>
+              <button class="kc-rec-send" id="kcRecSend">ناردن ✓</button>
             </div>
           </div>
         </div>
       </div>
     `;
 
-    const flow = document.getElementById('kcMessages');
-    const textInput = document.getElementById('kcTextInput');
-    const btnSend = document.getElementById('kcBtnSend');
-    const btnMic = document.getElementById('kcBtnMic');
-    const recPanel = document.getElementById('kcRecPanel');
-    const recTimer = document.getElementById('kcRecTimer');
-    const recCancel = document.getElementById('kcRecCancel');
-    const recDone = document.getElementById('kcRecDone');
+    const area = document.getElementById('kcMsgArea');
+    const input = document.getElementById('kcMsgInput');
+    const sendBtn = document.getElementById('kcBtnSend');
+    const micBtn = document.getElementById('kcBtnMic');
+    const recPopup = document.getElementById('kcRecPopup');
+    const counterEl = document.getElementById('kcRecCounter');
+    const discardBtn = document.getElementById('kcRecDiscard');
+    const sendVoiceBtn = document.getElementById('kcRecSend');
 
-    // ۱. هێنانی نامەکان
-    async function loadMessages() {
+    // ۱. هێنانی نامەکان بە دیزاینی سەردەمی
+    async function fetchMessages() {
       const { data, error } = await supabase
         .from('messages')
         .select('*')
@@ -63,77 +63,78 @@ window.KurdChat = {
         .order('created_at', { ascending: true });
 
       if (error) {
-        flow.innerHTML = '<div style="text-align:center; padding:20px; color:#EF4444;">نەتوانرا نامەکان باربکرێن</div>';
+        area.innerHTML = '<div style="text-align:center; padding:15px; color:#EF4444;">نەتوانرا نامەکان باربکرێن</div>';
         return;
       }
 
       if (!data || data.length === 0) {
-        flow.innerHTML = '<div style="text-align:center; padding:20px; color:rgba(255,255,255,.4); font-size:12px;">هیچ نامەیەک نییە، یەکەم نامە بنێرە!</div>';
+        area.innerHTML = '<div style="text-align:center; padding:20px; color:rgba(255,255,255,.4); font-size:12px;">هیچ نامەیەک نییە، قسەیەکی لەگەڵ بکە!</div>';
         return;
       }
 
-      flow.innerHTML = data.map(m => {
-        const isMe = m.sender_id === me.id;
+      area.innerHTML = data.map(m => {
+        const isMine = m.sender_id === me.id;
         const time = new Date(m.created_at).toLocaleTimeString('ckb-IQ', { hour: '2-digit', minute: '2-digit' });
 
         if (m.audio_url) {
+          // دیزاینی مۆدێرنی دەنگ (نەک ئەو پلەیەرە کۆنەی گۆگڵ)
           return `
-            <div class="kc-bubble ${isMe ? 'me' : 'other'}">
-              <div class="kc-voice-player">
-                <button class="kc-play-btn" onclick="KurdChat.playAudio(this, '${m.audio_url}')">▶</button>
-                <div class="kc-waveform">
-                  <div class="kc-wave-bar" style="height:10px;"></div>
-                  <div class="kc-wave-bar" style="height:16px;"></div>
-                  <div class="kc-wave-bar" style="height:8px;"></div>
-                  <div class="kc-wave-bar" style="height:18px;"></div>
-                  <div class="kc-wave-bar" style="height:12px;"></div>
-                  <div class="kc-wave-bar" style="height:14px;"></div>
+            <div class="kc-voice-bubble ${isMine ? 'mine' : 'theirs'}">
+              <button class="kc-audio-play-btn" onclick="KurdChat.toggleAudio(this, '${m.audio_url}')">▶</button>
+              <div class="kc-audio-info">
+                <div class="kc-audio-wave">
                   <div class="kc-wave-bar" style="height:6px;"></div>
+                  <div class="kc-wave-bar" style="height:12px;"></div>
+                  <div class="kc-wave-bar" style="height:16px;"></div>
+                  <div class="kc-wave-bar" style="height:10px;"></div>
+                  <div class="kc-wave-bar" style="height:14px;"></div>
+                  <div class="kc-wave-bar" style="height:8px;"></div>
+                  <div class="kc-wave-bar" style="height:12px;"></div>
                 </div>
+                <span class="kc-time-tag">${time}</span>
               </div>
-              <span class="kc-time">${time}</span>
             </div>
           `;
         } else {
           return `
-            <div class="kc-bubble ${isMe ? 'me' : 'other'}">
+            <div class="kc-bubble ${isMine ? 'mine' : 'theirs'}">
               <div>${escapeHtml(m.content)}</div>
-              <span class="kc-time">${time}</span>
+              <span class="kc-time-tag">${time}</span>
             </div>
           `;
         }
       }).join('');
 
-      flow.scrollTop = flow.scrollHeight;
+      area.scrollTop = area.scrollHeight;
     }
 
-    await loadMessages();
+    await fetchMessages();
 
     // ۲. ناردنی نامەی نوسین
-    async function sendTextMessage() {
-      const txt = textInput.value.trim();
-      if (!txt) return;
-      textInput.value = '';
+    async function sendMessage() {
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
 
       await supabase.from('messages').insert({
         sender_id: me.id,
         receiver_id: otherUserId,
-        content: txt
+        content: text
       });
 
-      await loadMessages();
+      await fetchMessages();
     }
 
-    btnSend.onclick = sendTextMessage;
-    textInput.onkeydown = (e) => { if (e.key === 'Enter') sendTextMessage(); };
+    sendBtn.onclick = sendMessage;
+    input.onkeydown = (e) => { if (e.key === 'Enter') sendMessage(); };
 
-    // ۳. سیستەمی پێشکەوتووی تۆمارکردنی دەنگ
+    // ۳. تۆمارکردنی دەنگ بە شێوازی سەردەمی
     let mediaRecorder = null;
     let audioChunks = [];
-    let timerInterval = null;
-    let secondsElapsed = 0;
+    let countInterval = null;
+    let seconds = 0;
 
-    btnMic.onclick = async () => {
+    micBtn.onclick = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorder = new MediaRecorder(stream);
@@ -144,44 +145,40 @@ window.KurdChat = {
         };
 
         mediaRecorder.start();
-        recPanel.classList.add('active');
+        recPopup.classList.add('show');
 
-        // دەستپێکردنی کاتژمێر
-        secondsElapsed = 0;
-        recTimer.textContent = '00:00';
-        timerInterval = setInterval(() => {
-          secondsElapsed++;
-          const m = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
-          const s = String(secondsElapsed % 60).padStart(2, '0');
-          recTimer.textContent = `${m}:${s}`;
+        seconds = 0;
+        counterEl.textContent = '00:00';
+        countInterval = setInterval(() => {
+          seconds++;
+          const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+          const s = String(seconds % 60).padStart(2, '0');
+          counterEl.textContent = `${m}:${s}`;
         }, 1000);
 
       } catch (err) {
-        alert('تکایە ڕێگە بدە بە مایکرۆفۆن بۆ ناردنی دەنگ!');
+        alert('تکایە لە وێبگەڕەکەت ڕێگە بدە بە بەکارهێنانی مایکرۆفۆن!');
       }
     };
 
-    // هەڵوەشاندنەوەی دەنگ
-    recCancel.onclick = () => {
+    discardBtn.onclick = () => {
       if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop();
         mediaRecorder.stream.getTracks().forEach(t => t.stop());
       }
-      clearInterval(timerInterval);
-      recPanel.classList.remove('active');
+      clearInterval(countInterval);
+      recPopup.classList.remove('show');
     };
 
-    // تەواوکردن و ناردنی دەنگ
-    recDone.onclick = () => {
+    sendVoiceBtn.onclick = () => {
       if (!mediaRecorder) return;
-      clearInterval(timerInterval);
-      recDone.textContent = 'خەریکی ناردنە...';
+      clearInterval(countInterval);
+      sendVoiceBtn.textContent = 'ناردن...';
 
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
         const fileName = `voice_${Date.now()}_${Math.random().toString(36).substr(2, 5)}.webm`;
 
-        // ئەپلۆدکردن بۆ ستۆریجی voice-messages
         const { data: uploadData, error: upErr } = await supabase.storage
           .from('voice-messages')
           .upload(fileName, audioBlob);
@@ -197,13 +194,13 @@ window.KurdChat = {
             audio_url: publicUrl
           });
 
-          await loadMessages();
+          await fetchMessages();
         } else {
-          alert('کێشە لە ناردنی دەنگەکە ڕوویدا');
+          alert('هەڵەیەک ڕوویدا لە کاتی ناردنی دەنگەکە');
         }
 
-        recDone.textContent = 'ناردنی دەنگ ✓';
-        recPanel.classList.remove('active');
+        sendVoiceBtn.textContent = 'ناردن ✓';
+        recPopup.classList.remove('show');
         mediaRecorder.stream.getTracks().forEach(t => t.stop());
       };
 
@@ -211,27 +208,56 @@ window.KurdChat = {
     };
   },
 
-  // لێدانی دەنگ و جوڵاندنی شەپۆل
-  playAudio: function(btn, url) {
-    if (window.currentAudio) {
-      window.currentAudio.pause();
-      if (window.currentBtn) window.currentBtn.textContent = '▶';
+  // کۆنتڕۆڵی لێدانی دەنگ و جوڵاندنی شەپۆل
+  toggleAudio: function(btn, url) {
+    if (window.activeAudio && window.activeAudioUrl === url) {
+      if (!window.activeAudio.paused) {
+        window.activeAudio.pause();
+        btn.textContent = '▶';
+        this.stopWaves(btn);
+        return;
+      } else {
+        window.activeAudio.play();
+        btn.textContent = '⏸';
+        this.startWaves(btn);
+        return;
+      }
+    }
+
+    if (window.activeAudio) {
+      window.activeAudio.pause();
+      if (window.activeAudioBtn) {
+        window.activeAudioBtn.textContent = '▶';
+        this.stopWaves(window.activeAudioBtn);
+      }
     }
 
     const audio = new Audio(url);
-    window.currentAudio = audio;
-    window.currentBtn = btn;
-    btn.textContent = '⏸';
+    window.activeAudio = audio;
+    window.activeAudioUrl = url;
+    window.activeAudioBtn = btn;
 
-    const bars = btn.parentElement.querySelectorAll('.kc-wave-bar');
-    bars.forEach(b => b.classList.add('active'));
+    btn.textContent = '⏸';
+    this.startWaves(btn);
 
     audio.play();
 
     audio.onended = () => {
       btn.textContent = '▶';
-      bars.forEach(b => b.classList.remove('active'));
+      this.stopWaves(btn);
     };
+  },
+
+  startWaves: function(btn) {
+    const bars = btn.parentElement.querySelectorAll('.kc-wave-bar');
+    bars.forEach((b, i) => {
+      setTimeout(() => b.classList.add('active'), i * 80);
+    });
+  },
+
+  stopWaves: function(btn) {
+    const bars = btn.parentElement.querySelectorAll('.kc-wave-bar');
+    bars.forEach(b => b.classList.remove('active'));
   }
 };
 
