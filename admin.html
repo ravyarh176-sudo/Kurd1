@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="chat.css">
 </head>
 <body>
 
@@ -51,7 +52,7 @@
 
   </main>
 
-  <!-- User Detail Sheet Modal -->
+  <!-- User Detail & Chat Sheet Modal -->
   <div class="admin-overlay" id="userSheetOverlay">
     <div class="admin-sheet">
       <button class="admin-close" id="userSheetClose">✕</button>
@@ -62,7 +63,19 @@
         <div class="user-detail-role" id="udRole">ڕۆڵ</div>
       </div>
 
-      <div class="admin-tab-panel">
+      <!-- تابی چات و بەڕێوەبردن -->
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="chat">گفتوگۆ و دەنگ</button>
+        <button class="admin-tab" data-tab="manage">بەڕێوەبردن و دۆخ</button>
+      </div>
+
+      <!-- پەڕەی گفتوگۆ (Chat & Voice) -->
+      <div id="tabChat" class="admin-tab-panel">
+        <div id="userChatMount" style="min-height: 280px;"></div>
+      </div>
+
+      <!-- پەڕەی بەڕێوەبردن (Ban) -->
+      <div id="tabManage" class="admin-tab-panel" hidden>
         <div class="manage-block">
           <div class="manage-row">
             <span>دۆخی هەژمار:</span>
@@ -84,6 +97,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script src="guard.js"></script>
+  <script src="chat.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>
