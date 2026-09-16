@@ -1,238 +1,258 @@
 /* ============================================================
-   MODERN CHAT & VOICE (سۆشیاڵ میدیا ستایل بۆ Kurd Technology)
+   TELEGRAM / WHATSAPP STYLE CHAT & VOICE
 ============================================================ */
 
-.kc-chat-container {
-  display: flex;
-  flex-direction: column;
-  height: 420px;
-  background: #0d1117;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+#userChatMount {
+  width: 100%;
 }
 
-/* لیستی نامەکان */
-.kc-messages-flow {
+.kc-chat-box {
+  display: flex;
+  flex-direction: column;
+  height: 380px;
+  background: #0B0E14;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  position: relative;
+}
+
+/* ناوچەی نامەکان */
+.kc-msg-area {
   flex: 1;
-  padding: 16px;
+  padding: 14px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  background: radial-gradient(circle at 50% 50%, rgba(253, 186, 18, 0.03), transparent 70%), #0d1117;
+  gap: 10px;
+  background-color: #0b0e14;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 16px 16px;
 }
 
-/* باڵۆنی نامەکان */
+/* باڵۆنی نامەی نوسین */
 .kc-bubble {
-  max-width: 80%;
-  padding: 10px 14px;
-  border-radius: 18px;
+  max-width: 82%;
+  padding: 8px 14px;
+  border-radius: 16px;
   font-size: 13.5px;
   line-height: 1.5;
-  position: relative;
   word-break: break-word;
+  position: relative;
 }
 
-/* نامەی نێردراو لەلایەن خۆتەوە */
-.kc-bubble.me {
+.kc-bubble.mine {
   align-self: flex-start;
-  background: linear-gradient(135deg, #FDBA12, #E69D00);
+  background: #FDBA12;
   color: #000;
   font-weight: 500;
   border-bottom-right-radius: 4px;
 }
 
-/* نامەی وەرگیراو */
-.kc-bubble.other {
+.kc-bubble.theirs {
   align-self: flex-end;
-  background: #1e2633;
+  background: #1C2331;
   color: #fff;
   border-bottom-left-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.kc-time {
+.kc-time-tag {
   font-size: 10px;
-  opacity: 0.65;
-  margin-top: 4px;
-  text-align: left;
+  opacity: 0.6;
+  margin-top: 3px;
   display: block;
+  text-align: left;
 }
 
-/* ---------- دیزاینی نوێی کارتی ڤۆیس (وەک واتساپ) ---------- */
-.kc-voice-player {
+/* ---------- دیزاینی ڤۆیس (شێوازی تلگرام) ---------- */
+.kc-voice-bubble {
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-width: 220px;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 16px;
+  max-width: 250px;
 }
 
-.kc-play-btn {
+.kc-voice-bubble.mine {
+  align-self: flex-start;
+  background: #FDBA12;
+  color: #000;
+  border-bottom-right-radius: 4px;
+}
+
+.kc-voice-bubble.theirs {
+  align-self: flex-end;
+  background: #1C2331;
+  color: #fff;
+  border-bottom-left-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.kc-audio-play-btn {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.15);
   border: none;
+  background: rgba(0, 0, 0, 0.18);
+  color: inherit;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: inherit;
-  transition: transform 0.15s;
+  flex-shrink: 0;
+  font-size: 14px;
 }
 
-.kc-bubble.other .kc-play-btn {
+.kc-voice-bubble.theirs .kc-audio-play-btn {
   background: #FDBA12;
   color: #000;
 }
 
-.kc-play-btn:active {
-  transform: scale(0.92);
+.kc-audio-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.kc-waveform {
-  flex: 1;
+.kc-audio-wave {
   display: flex;
   align-items: center;
   gap: 3px;
-  height: 24px;
+  height: 16px;
 }
 
 .kc-wave-bar {
   width: 3px;
-  border-radius: 3px;
+  height: 6px;
   background: currentColor;
   opacity: 0.4;
-  height: 8px;
-  transition: height 0.2s, opacity 0.2s;
+  border-radius: 2px;
+  transition: all 0.2s ease;
 }
 
 .kc-wave-bar.active {
   opacity: 1;
-  height: 18px;
+  height: 16px;
 }
 
-/* ---------- بەشی خوارەوە (Input Bar) ---------- */
-.kc-input-bar {
-  padding: 10px 14px;
-  background: #161b22;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+/* شریتی ناردن (Input Bar) */
+.kc-action-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #151A23;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   position: relative;
 }
 
-.kc-text-input {
+.kc-msg-input {
   flex: 1;
-  background: #0d1117;
+  background: #0B0E14;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 24px;
-  padding: 10px 16px;
+  border-radius: 22px;
+  padding: 9px 14px;
   color: #fff;
   font-family: inherit;
   font-size: 13.5px;
   outline: none;
 }
 
-.kc-text-input:focus {
+.kc-msg-input:focus {
   border-color: #FDBA12;
 }
 
-.kc-btn-send {
-  width: 40px;
-  height: 40px;
+.kc-action-btn {
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: #FDBA12;
   border: none;
-  color: #000;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.15s;
+  flex-shrink: 0;
+  transition: transform 0.1s;
 }
 
-/* دوگمەی مایکرۆفۆن (سۆشیاڵ ستایل) */
-.kc-btn-mic {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.kc-action-btn:active {
+  transform: scale(0.92);
+}
+
+.kc-btn-mic-gold {
+  background: rgba(253, 186, 18, 0.15);
+  border: 1px solid rgba(253, 186, 18, 0.35);
   color: #FDBA12;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
 }
 
-.kc-btn-mic:active {
-  transform: scale(0.9);
+.kc-btn-send-gold {
+  background: #FDBA12;
+  color: #000;
 }
 
-/* دۆخی تۆمارکردنی دەنگ (کاتی پەنجەنان) */
-.kc-recording-panel {
+/* پەنجەرەی کاتی تۆمارکردنی دەنگ */
+.kc-record-popup {
   position: absolute;
   inset: 0;
-  background: #161b22;
+  background: #151A23;
   display: none;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
-  z-index: 5;
+  padding: 0 14px;
+  z-index: 10;
 }
 
-.kc-recording-panel.active {
+.kc-record-popup.show {
   display: flex;
 }
 
-.kc-rec-indicator {
+.kc-rec-live {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.kc-rec-dot {
-  width: 12px;
-  height: 12px;
+.kc-live-dot {
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: #EF4444;
-  animation: pulseRec 1s infinite alternate;
+  animation: pulseLive 0.8s infinite alternate;
 }
 
-@keyframes pulseRec {
-  from { opacity: 0.4; transform: scale(0.85); }
-  to { opacity: 1; transform: scale(1.15); }
+@keyframes pulseLive {
+  from { opacity: 0.3; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1.2); }
 }
 
-.kc-rec-timer {
+.kc-live-counter {
+  font-family: monospace;
   font-size: 14px;
   font-weight: 700;
   color: #fff;
-  font-family: monospace;
 }
 
-.kc-rec-cancel {
+.kc-rec-discard {
   background: rgba(239, 68, 68, 0.15);
   border: 1px solid #EF4444;
   color: #EF4444;
   font-size: 12px;
   font-weight: 700;
-  border-radius: 20px;
-  padding: 6px 14px;
+  border-radius: 18px;
+  padding: 6px 12px;
   cursor: pointer;
 }
 
-.kc-rec-done {
+.kc-rec-send {
   background: #10B981;
   border: none;
   color: #000;
   font-size: 12px;
   font-weight: 700;
-  border-radius: 20px;
-  padding: 6px 16px;
+  border-radius: 18px;
+  padding: 6px 14px;
   cursor: pointer;
 }
