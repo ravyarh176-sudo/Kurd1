@@ -1,203 +1,148 @@
-// ============================================================
-// ADMIN PANEL JS - خوێندنەوەی دروستی بەکارهێنەران و ئامارەکان
-// ============================================================
+// Kurd Technology — admin dashboard (owner only).
 
-let allUsers = [];
+window.addEventListener('kurdtech:ready', async () => {
+  const supabase = window.kurdtechSupabase;
+  const me = window.kurdtechUser;
+  const myProfile = window.kurdtechProfile;
 
-document.addEventListener('DOMContentLoaded', async () => {
-  // دڵنیابوون لەوەی سەپابەیس هەیە
-  if (typeof supabaseClient === 'undefined' || !supabaseClient) {
-    console.error('Supabase client is missing.');
+  if (!myProfile || myProfile.role !== 'owner') {
+    window.location.href = 'services.html';
     return;
   }
 
-  // وەرگرتنی دۆخی چوونەژوورەوە
-  try {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) {
-      window.location.href = 'index.html';
+  const $ = (id) => document.getElementById(id);
+  let allUsers = [];
+  let activeUser = null;
+
+  function initials(name) {
+    return (name || '؟').trim().charAt(0).toUpperCase();
+  }
+
+  async function loadUsers() {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, full_name, role, banned, ban_reason, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error(error);
+      $('userList').innerHTML = `<div class="loading-hint">نەتوانرا بەکارهێنەران بار بکرێن</div>`;
       return;
     }
-  } catch (e) {
-    console.error(e);
+
+    allUsers = data || [];
+    renderStats();
+    renderList();
   }
 
-  // بارکردنی بەکارهێنەران
-  await fetchAndRenderUsers();
+  function renderStats() {
+    if ($('statTotal')) $('statTotal').textContent = allUsers.length;
+    if ($('statBanned')) $('statBanned').textContent = allUsers.filter(u => u.banned).length;
+    if ($('statOwners')) $('statOwners').textContent = allUsers.filter(u => u.role === 'owner').length;
+  }
 
-  // بەستنەوەی پۆپ ئەپی بەکارهێنەر
-  const closeBtn = document.getElementById('closeSheetBtn');
-  const overlay = document.getElementById('userOverlay');
+  function renderList() {
+    const list = $('userList');
+    if (!list) return;
+
+    if (!allUsers.length) {
+      list.innerHTML = `<div class="loading-hint">هیچ بەکارهێنەرێک نییە</div>`;
+      return;
+    }
+
+    list.innerHTML = allUsers.map(u => {
+      const badge = u.role === 'owner'
+        ? '<span class="uc-badge owner">خاوەن</span>'
+        : (u.banned ? '<span class="uc-badge banned">دەرکراو</span>' : '<span class="uc-badge active">چالاک</span>');
+      
+      const createdDate = u.created_at ? new Date(u.created_at).toLocaleDateString('ckb-IQ') : '';
+
+      return `
+        <div class="user-card" data-id="${u.id}">
+          <div class="uc-avatar">${initials(u.full_name)}</div>
+          <div class="uc-info">
+            <div class="uc-name">${escapeText(u.full_name || 'بەکارهێنەر')}</div>
+            <div class="uc-sub">${createdDate}</div>
+          </div>
+          ${badge}
+        </div>`;
+    }).join('');
+
+    list.querySelectorAll('.user-card').forEach(card => {
+      card.addEventListener('click', () => openUser(card.dataset.id));
+    });
+  }
+
+  // ---------- User detail sheet ----------
+  const overlay = $('userSheetOverlay');
+  const closeBtn = $('userSheetClose');
+  
   if (closeBtn && overlay) {
     closeBtn.addEventListener('click', () => overlay.classList.remove('open'));
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) overlay.classList.remove('open');
+    overlay.addEventListener('click', (e) => { 
+      if (e.target === overlay) overlay.classList.remove('open'); 
     });
   }
+
+  function openUser(id) {
+    const u = allUsers.find(x => x.id === id);
+    if (!u) return;
+    activeUser = u;
+
+    if ($('udAvatar')) $('udAvatar').textContent = initials(u.full_name);
+    if ($('udName')) $('udName').textContent = u.full_name || 'بێ ناو';
+    if ($('udRole')) $('udRole').textContent = u.role === 'owner' ? 'خاوەنی ماڵپەڕ' : 'بەکارهێنەر';
+    if ($('udStatus')) $('udStatus').textContent = u.banned ? 'دەرکراوە' : 'چالاکە';
+    if ($('banReasonInput')) $('banReasonInput').value = u.ban_reason || '';
+
+    const banBtn = $('banToggleBtn');
+    if (banBtn) {
+      if (u.role === 'owner') {
+        banBtn.style.display = 'none';
+      } else {
+        banBtn.style.display = 'block';
+        banBtn.textContent = u.banned ? 'گەڕاندنەوەی هەژمار' : 'دەرکردن لە ماڵپەڕ';
+        banBtn.classList.toggle('is-banned', u.banned);
+      }
+    }
+
+    if (overlay) overlay.classList.add('open');
+  }
+
+  const banToggleBtn = $('banToggleBtn');
+  if (banToggleBtn) {
+    banToggleBtn.addEventListener('click', async () => {
+      if (!activeUser) return;
+      const willBan = !activeUser.banned;
+      const reason = $('banReasonInput') ? $('banReasonInput').value.trim() : '';
+
+      banToggleBtn.disabled = true;
+      banToggleBtn.textContent = 'چاوەڕوان بە...';
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ banned: willBan, ban_reason: willBan ? (reason || 'پێشێلکردنی یاساکانی ماڵپەڕ') : null })
+        .eq('id', activeUser.id);
+
+      banToggleBtn.disabled = false;
+
+      if (error) {
+        alert('نەتوانرا دۆخی بەکارهێنەر بگۆڕدرێت.');
+        return;
+      }
+      activeUser.banned = willBan;
+      await loadUsers();
+      openUser(activeUser.id);
+    });
+  }
+
+  function escapeText(str) {
+    if (!str) return '';
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  // دەستپێکردن
+  loadUsers();
 });
-
-async function fetchAndRenderUsers() {
-  const usersListEl = document.getElementById('usersList');
-  const kpiTotal = document.getElementById('kpiTotalUsers');
-  const kpiAdmins = document.getElementById('kpiAdmins');
-  const kpiBanned = document.getElementById('kpiBanned');
-
-  if (usersListEl) {
-    usersListEl.innerHTML = '<div class="loading-hint">باردەکرێت...</div>';
-  }
-
-  // ۱. هەوڵدان بۆ هێنان بە شێوازی RPC کە تایبەتە بە ئەدمین لە سیستەمەکەتدا
-  let usersData = null;
-  
-  try {
-    const { data: rpcData, error: rpcErr } = await supabaseClient.rpc('admin_get_all_users');
-    if (!rpcErr && rpcData) {
-      usersData = rpcData;
-    }
-  } catch (e) {
-    console.warn('RPC method failed, falling back to direct table query');
-  }
-
-  // ۲. ئەگەر RPC نەبوو، ڕاستەوخۆ لە خشتەی profiles دەیهێنین
-  if (!usersData) {
-    const { data: tableData, error: tableErr } = await supabaseClient
-      .from('profiles')
-      .select('*');
-
-    if (!tableErr && tableData) {
-      usersData = tableData;
-    } else {
-      console.error('Table error:', tableErr);
-    }
-  }
-
-  // ئەگەر بەکارهێنەر نەبوو
-  if (!usersData || usersData.length === 0) {
-    if (usersListEl) {
-      usersListEl.innerHTML = '<div class="loading-hint">هیچ بەکارهێنەرێک نەدۆزرایەوە یان دەسەڵاتی بینین نییە</div>';
-    }
-    if (kpiTotal) kpiTotal.textContent = '0';
-    if (kpiAdmins) kpiAdmins.textContent = '0';
-    if (kpiBanned) kpiBanned.textContent = '0';
-    return;
-  }
-
-  allUsers = usersData;
-
-  // ژماردنی ئامارەکان
-  const total = allUsers.length;
-  let admins = 0;
-  let banned = 0;
-
-  allUsers.forEach(u => {
-    const r = (u.role || '').toLowerCase();
-    if (r === 'admin' || r === 'owner') admins++;
-    if (u.is_banned || u.status === 'banned') banned++;
-  });
-
-  if (kpiTotal) kpiTotal.textContent = total;
-  if (kpiAdmins) kpiAdmins.textContent = admins;
-  if (kpiBanned) kpiBanned.textContent = banned;
-
-  // ڕێزکردنی کارتەکان بە دیزاینە ئەسڵییەکە
-  if (usersListEl) {
-    usersListEl.innerHTML = '';
-
-    allUsers.forEach(user => {
-      const name = user.full_name || user.username || user.name || (user.email ? user.email.split('@')[0] : 'بەکارهێنەر');
-      const email = user.email || 'بێ ئیمەیڵ';
-      const role = (user.role || 'user').toLowerCase();
-      const isBanned = user.is_banned || user.status === 'banned';
-      const initial = name.trim().charAt(0).toUpperCase() || '؟';
-
-      let badgeClass = 'active';
-      let badgeLabel = 'چالاک';
-
-      if (role === 'admin' || role === 'owner') {
-        badgeClass = 'owner';
-        badgeLabel = 'سەرۆک';
-      } else if (isBanned) {
-        badgeClass = 'banned';
-        badgeLabel = 'بەندکراو';
-      }
-
-      const card = document.createElement('div');
-      card.className = 'user-card';
-      card.innerHTML = `
-        <div class="uc-avatar">${initial}</div>
-        <div class="uc-info">
-          <div class="uc-name">${escapeText(name)}</div>
-          <div class="uc-sub">${escapeText(email)}</div>
-        </div>
-        <span class="uc-badge ${badgeClass}">${badgeLabel}</span>
-      `;
-
-      card.addEventListener('click', () => showUserSheet(user));
-      usersListEl.appendChild(card);
-    });
-  }
-}
-
-function showUserSheet(user) {
-  const overlay = document.getElementById('userOverlay');
-  if (!overlay) return;
-
-  const name = user.full_name || user.username || user.name || (user.email ? user.email.split('@')[0] : 'بەکارهێنەر');
-  const email = user.email || 'بێ ئیمەیڵ';
-  const role = user.role || 'user';
-  const isBanned = user.is_banned || user.status === 'banned';
-
-  const avatar = document.getElementById('sheetAvatar');
-  const nameEl = document.getElementById('sheetName');
-  const emailEl = document.getElementById('sheetEmail');
-  const roleEl = document.getElementById('sheetRoleText');
-  const statusEl = document.getElementById('sheetStatusText');
-  const dateEl = document.getElementById('sheetCreatedAt');
-  const banBtn = document.getElementById('sheetBanBtn');
-
-  if (avatar) avatar.textContent = name.trim().charAt(0).toUpperCase() || '؟';
-  if (nameEl) nameEl.textContent = name;
-  if (emailEl) emailEl.textContent = email;
-  if (roleEl) roleEl.textContent = role;
-  if (statusEl) statusEl.textContent = isBanned ? 'بەندکراو' : 'چالاک';
-  if (dateEl) dateEl.textContent = user.created_at ? new Date(user.created_at).toLocaleDateString('ckb-IQ') : '---';
-
-  if (banBtn) {
-    banBtn.textContent = isBanned ? 'لابردنی بەندکردن' : 'بەندکردنی بەکارهێنەر';
-    if (isBanned) banBtn.classList.add('is-banned');
-    else banBtn.classList.remove('is-banned');
-
-    banBtn.onclick = async () => {
-      banBtn.disabled = true;
-      banBtn.textContent = 'چاوەڕوان بە...';
-      const targetStatus = !isBanned;
-
-      // هەوڵدان لەگەڵ RPC یان Table
-      let ok = false;
-      try {
-        const { error } = await supabaseClient.rpc('admin_toggle_ban', { target_user_id: user.id });
-        if (!error) ok = true;
-      } catch (e) {}
-
-      if (!ok) {
-        const { error } = await supabaseClient
-          .from('profiles')
-          .update({ is_banned: targetStatus })
-          .eq('id', user.id);
-        if (!error) ok = true;
-      }
-
-      overlay.classList.remove('open');
-      await fetchAndRenderUsers();
-    };
-  }
-
-  overlay.classList.add('open');
-}
-
-function escapeText(str) {
-  if (!str) return '';
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
-}
