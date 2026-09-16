@@ -30,54 +30,51 @@
     <!-- Stats -->
     <div class="stats-row">
       <div class="stat-box">
-        <b id="kpiTotalUsers">0</b>
+        <b id="statTotal">0</b>
         <span>سەرجەم بەکارهێنەران</span>
       </div>
       <div class="stat-box">
-        <b id="kpiAdmins" style="color: #4ADE80;">0</b>
-        <span>بەڕێوەبەران</span>
+        <b id="statOwners" style="color: #4ADE80;">0</b>
+        <span>خاوەنەکان</span>
       </div>
       <div class="stat-box">
-        <b id="kpiBanned" style="color: #FF6B7A;">0</b>
-        <span>بەندکراوەکان</span>
+        <b id="statBanned" style="color: #FF6B7A;">0</b>
+        <span>دەرکراوەکان</span>
       </div>
     </div>
 
     <!-- User List -->
     <div class="section-title">بەکارهێنەرانی سیستم</div>
-    <div class="user-list" id="usersList">
+    <div class="user-list" id="userList">
       <div class="loading-hint">باردەکرێت...</div>
     </div>
 
   </main>
 
   <!-- User Detail Sheet Modal -->
-  <div class="admin-overlay" id="userOverlay">
+  <div class="admin-overlay" id="userSheetOverlay">
     <div class="admin-sheet">
-      <button class="admin-close" id="closeSheetBtn">✕</button>
+      <button class="admin-close" id="userSheetClose">✕</button>
 
       <div class="user-detail-head">
-        <div class="user-detail-avatar" id="sheetAvatar">؟</div>
-        <div class="user-detail-name" id="sheetName">ناو</div>
-        <div class="user-detail-role" id="sheetEmail">ئیمەیڵ</div>
+        <div class="user-detail-avatar" id="udAvatar">؟</div>
+        <div class="user-detail-name" id="udName">ناو</div>
+        <div class="user-detail-role" id="udRole">ڕۆڵ</div>
       </div>
 
       <div class="admin-tab-panel">
         <div class="manage-block">
           <div class="manage-row">
-            <span>ڕۆڵ:</span>
-            <b id="sheetRoleText">user</b>
-          </div>
-          <div class="manage-row">
-            <span>دۆخ:</span>
-            <b id="sheetStatusText">چالاک</b>
-          </div>
-          <div class="manage-row">
-            <span>بەرواری دروستبوون:</span>
-            <span id="sheetCreatedAt" style="font-size:11px; color:rgba(255,255,255,.6);">...</span>
+            <span>دۆخی هەژمار:</span>
+            <b id="udStatus">چالاکە</b>
           </div>
 
-          <button class="btn-ban" id="sheetBanBtn">بەندکردنی بەکارهێنەر</button>
+          <div class="field" style="margin-top: 10px;">
+            <label>هۆکاری دەرکردن:</label>
+            <textarea id="banReasonInput" placeholder="هۆکاری دەرکردن بنووسە..."></textarea>
+          </div>
+
+          <button class="btn-ban" id="banToggleBtn">دەرکردن لە ماڵپەڕ</button>
         </div>
       </div>
 
