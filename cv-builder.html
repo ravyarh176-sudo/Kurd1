@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دروستکردنی CV | Kurd Technology</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="cv-builder.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+</head>
+<body>
+
+  <div class="bg"></div>
+
+  <header class="topbar no-print">
+    <a class="brand" href="services.html">
+      <span class="back-arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5l7 7-7 7"></path><path d="M21 12H3"></path></svg>
+      </span>
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="#241800"><path d="M12 2l1.9 5.8H20l-4.9 3.6 1.9 5.8L12 13.6l-5 3.6 1.9-5.8L4 7.8h6.1L12 2z"/></svg>
+      </div>
+      <span class="brand-title">دروستکردنی CV</span>
+    </a>
+    <div class="topbar-actions">
+      <button class="btn-print" id="imageBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>
+        وێنە
+      </button>
+      <button class="btn-print" id="printBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        PDF
+      </button>
+    </div>
+  </header>
+
+  <main class="workspace no-print-pad">
+
+    <!-- ============ FORM PANEL ============ -->
+    <section class="panel form-panel no-print">
+
+      <div class="field-group">
+        <div class="group-title">بەشەکانی CVـەکەت — بەدڵی خۆت پیشانیان بدە یان بیانشارەوە</div>
+        <div class="sec-toggle-grid">
+          <label class="sec-toggle" data-target="secSummary"><input type="checkbox" checked> پوختەی کەسی</label>
+          <label class="sec-toggle" data-target="secObjective"><input type="checkbox" checked> ئامانجی پیشەیی</label>
+          <label class="sec-toggle" data-target="secExperience"><input type="checkbox" checked> ئەزموونی کار</label>
+          <label class="sec-toggle" data-target="secProjects"><input type="checkbox" checked> پڕۆژەکان</label>
+          <label class="sec-toggle" data-target="secVolunteer"><input type="checkbox" checked> کاری خۆبەخشی</label>
+          <label class="sec-toggle" data-target="secEducation"><input type="checkbox" checked> خوێندن</label>
+          <label class="sec-toggle" data-target="secCourses"><input type="checkbox" checked> کۆرس و بڕوانامە</label>
+          <label class="sec-toggle" data-target="secAchievements"><input type="checkbox" checked> دەستکەوتەکان</label>
+          <label class="sec-toggle" data-target="secSkills"><input type="checkbox" checked> لێهاتووییەکان</label>
+          <label class="sec-toggle" data-target="secLangs"><input type="checkbox" checked> زمانەکان</label>
+        </div>
+        <p class="sec-toggle-hint">بۆ نموونە: ئەگەر خوێندنت پەیوەندی بە کارەکەتەوە نییە، تیکی "خوێندن" لاببە بۆ ئەوەی دەرنەکەوێت — بەبێ ئەوەی زانیارییەکەت بسڕیتەوە.</p>
+      </div>
+
+      <div class="field-group">
+        <div class="group-title">وێنەی کەسی</div>
+        <div class="photo-editor-row">
+          <div class="photo-frame" id="photoFrame">
+            <canvas id="photoCanvas" width="168" height="168"></canvas>
+            <div class="photo-placeholder" id="photoPlaceholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6"></path></svg>
+            </div>
+            <button type="button" class="photo-remove" id="photoRemove" title="سڕینەوەی وێنە">✕</button>
+          </div>
+          <div class="photo-controls">
+            <label class="btn-upload" for="photoInput">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"></path><path d="M6 10l6-6 6 6"></path><path d="M4 20h16"></path></svg>
+              وێنە هەڵبژێرە
+            </label>
+            <input id="photoInput" type="file" accept="image/*" hidden>
+            <div class="zoom-row">
+              <span class="zoom-label">قەبارە</span>
+              <input id="photoZoom" type="range" min="1" max="2.8" step="0.01" value="1" disabled>
+            </div>
+            <p class="photo-hint">وێنەکە بکێشە بۆ گواستنەوە، سلایدەر بەکاربێنە بۆ زووم</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="group-title">زانیاری کەسی</div>
+        <div class="field-row two">
+          <div class="field">
+            <label>ناوی تەواو</label>
+            <input id="fName" type="text" placeholder="بۆ نموونە: ئاراس ئەحمەد" value="ئاراس ئەحمەد">
+          </div>
+          <div class="field">
+            <label>پیشە / بابەت</label>
+            <input id="fTitle" type="text" placeholder="بۆ نموونە: گەشەپێدەری وێب" value="گەشەپێدەری وێب">
+          </div>
+        </div>
+        <div class="field-row two">
+          <div class="field">
+            <label>ژمارەی مۆبایل</label>
+            <input id="fPhone" type="text" placeholder="٠٧٥٠ ١٢٣ ٤٥٦٧" value="٠٧٥٠ ١٢٣ ٤٥٦٧">
+          </div>
+          <div class="field">
+            <label>ئیمەیل</label>
+            <input id="fEmail" type="text" placeholder="name@email.com" value="aras@email.com">
+          </div>
+        </div>
+        <div class="field">
+          <label>شار / ناونیشان</label>
+          <input id="fCity" type="text" placeholder="هەولێر، کوردستان" value="هەولێر، کوردستان">
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="group-title-row">
+          <div class="group-title">لینکەکان (سۆشیال میدیا، پۆرتفۆلیۆ...)</div>
+          <button type="button" class="btn-add" data-add="links">+ زیادکردن</button>
+        </div>
+        <p class="sec-toggle-hint">ناوی پلاتفۆرمەکە بنووسە (بۆ نموونە: tiktok, instagram, github) — ئایکۆن و ڕەنگی خۆی خۆکارانە دەردەکەوێت.</p>
+        <div id="linksList"></div>
+      </div>
+
+      <div class="field-group">
+        <div class="group-title-row">
+          <div class="group-title">پوختەی کەسی</div>
+          <label class="mini-toggle"><input type="checkbox" id="tgSummary" checked data-target="secSummary"><span class="mini-track"><span class="mini-thumb"></span></span></label>
+        </div>
+        <div class="field">
+          <label>چەند وشەیەک دەربارەی خۆت بنووسە</label>
+          <textarea id="fSummary" rows="4" placeholder="گەشەپێدەرێکی وێب کە...">گەشەپێدەرێکی وێبم بە ٣ ساڵ ئەزموون لە دروستکردنی ماڵپەڕ و ئەپلیکەیشنی مۆبایل، خوازیارم کار لەگەڵ تیمێکی پیشەیی بکەم بۆ گەشەپێدانی خزمەتگوزارییە دیجیتاڵییەکان.</textarea>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="group-title-row">
+          <div class="group-title">ئامانجی پیشەیی</div>
+          <label class="mini-toggle"><input type="checkbox" id="tgObjective" checked data-target="secObjective"><span class="mini-track"><span class="mini-thumb"></span></span></label>
+        </div>
+        <div class="field">
+          <label>چیت دەوێت لە داهاتوودا بەدەستی بهێنیت (ئارەزوومەندانە)</label>
+          <textarea id="fObjective" rows="3" placeholder="ئامانجم گەیشتنە..."></textarea>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="group-title-row">
+          <div class="group-title">ئەزموونی کار</div>
+          <div class="row-controls">
+            <label class="mini-toggle"><input type="checkbox" id="tgExperience" checked data-target="secExperience"><span class="mini-track"><span class="mini-thumb"></span></span></label>
+            <button type="button" class="btn-add" data-add="experience">+ زیادکردن</button>
+          </div>
+        </div>
+        <div id="experienceList"></div>
+      </div>
+
+      <div class="field-group">
+        <div class="group-title-row">
+          <div class="group-title">پڕۆژەکان</div>
+          <div class="row-controls">
+            <label class="mini-toggle"><input type="checkbox" id="tgProjects" checked data-target="secProjects"><span class="mini-track"><span class="mini-thumb"></span></span></label>
+            <button type="button" class="btn-add" data-add="projects">+ زیادکردن</button>
+          </div>
+        </div>
+        <div id="projectsList"></div>
+      </div>
+
+      <div class="field-group">
+        <div class="group-title-row">
+          <div class="group-title">کاری خۆبەخشی</div>
+          <div class="row-controls">
+            <label class="mini-toggle"><input type="checkbox" id="tgVolunteer" checked data-target="secVolunteer"><span class="mini-track"><span class="mini-thumb"></span></span></label>
+            <button type="button" class="btn-add" data-add="volunteer">+ زیادکردن</button>
+          </div>
+        </div>
+        <div id="volunteerList"></div>
+      </div>
+
+      <div class="field-group">
+        <div class="group-title-row">
+          <div class="group-title">خوێندن</div>
+          <div class="row-controls">
+            <label class="mini-toggle"><input type="checkbox" id="tgEducation" checked data-target="secEducation"><span class="mini-track"><span class="mini-thumb"></span></span></label>
+            <button type="button" class="btn-add" data-add="education">+ زیادکردن</button>
+          </div>
+        </div>
+        <div id="educationList"></div>
+      </div>
+
+      <div class="field-group">
+        <div class="group-title-row">
+          <div class="group-title">کۆرس و بڕوانامەکان</div>
+          <div class="row-controls">
+            <label class="mini-toggle"><input type="checkbox" id="tgCourses" checked data-target="secCourses"><span class="mini-track"><span class="mini-thumb"></span></span></label>
+            <button type="button" class="btn-add" data-add="courses">+ زیادکردن</button>
+          </div>
+        </div>
+        <div id="coursesList"></div>
+      </div>
+
+      <div class="field-group">
+        <div class="group-title-row">
+          <div class="group-title">دەستکەوت و خەڵاتەکان</div>
+          <div class="row-controls">
+            <label class="mini-toggle"><input type="checkbox" id="tgAchievements" checked data-target="secAchievements"><span class="mini-track"><span class="mini-thumb"></span></span></label>
+            <button type="button" class="btn-add" data-add="achievements">+ زیادکردن</button>
+          </div>
+        </div>
+        <div id="achievementsList"></div>
+      </div>
+
+      <div class="field-group">
+        <div class="group-title-row">
+          <div class="group-title">لێهاتووییەکان</div>
+          <label class="mini-toggle"><input type="checkbox" id="tgSkills" checked data-target="secSkills"><span class="mini-track"><span class="mini-thumb"></span></span></label>
+        </div>
+        <div class="chip-input-row">
+          <input id="skillInput" type="text" placeholder="بۆ نموونە: JavaScript" class="chip-input">
+          <button type="button" class="btn-chip-add" id="skillAddBtn">+ زیادکردن</button>
+        </div>
+        <div class="chip-list" id="skillChips"></div>
+      </div>
+
+      <div class="field-group">
+        <div class="group-title-row">
+          <div class="group-title">زمانەکان</div>
+          <label class="mini-toggle"><input type="checkbox" id="tgLangs" checked data-target="secLangs"><span class="mini-track"><span class="mini-thumb"></span></span></label>
+        </div>
+        <div class="chip-input-row lang-row">
+          <input id="langInput" type="text" placeholder="بۆ نموونە: ئینگلیزی" class="chip-input">
+          <select id="langLevel" class="lang-level">
+            <option value="5">زمانی دایک</option>
+            <option value="4" selected>زۆر باش</option>
+            <option value="3">باش</option>
+            <option value="2">مامناوەند</option>
+            <option value="1">سەرەتایی</option>
+          </select>
+          <button type="button" class="btn-chip-add" id="langAddBtn">+ زیادکردن</button>
+        </div>
+        <div class="chip-list lang-chip-list" id="langChips"></div>
+      </div>
+
+      <div class="field-group">
+        <div class="group-title-row">
+          <div class="group-title">بەشی تایبەت بە خۆت</div>
+          <button type="button" class="btn-add" id="addCustomBtn">+ بەشێکی نوێ</button>
+        </div>
+        <p class="photo-hint">هەر بەشێکی تر کە پێویستت پێیەتی و لێرە نییە، خۆت دروستی بکە — ناونیشان و ناوەڕۆکی خۆت بنووسە.</p>
+        <div id="customList"></div>
+      </div>
+
+    </section>
+
+    <!-- ============ LIVE PREVIEW ============ -->
+    <section class="panel preview-panel">
+
+      <button type="button" class="open-gallery-btn no-print" id="openGalleryBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>
+        دیزاین بگۆڕە <span class="gallery-count">(٢٥ دیزاین)</span>
+      </button>
+
+      <div class="gallery-overlay no-print" id="galleryOverlay">
+        <div class="gallery-sheet">
+          <div class="gallery-head">
+            <h2>دیزاینی CVـەکەت هەڵبژێرە</h2>
+            <button type="button" class="gallery-close" id="galleryCloseBtn" aria-label="داخستن">✕</button>
+          </div>
+
+          <div class="gallery-body">
+            <div class="template-picker" id="templatePicker">
+              <div class="shape-row" id="shapeRow">
+                <button type="button" class="shape-btn active" data-shape="classic">
+                  <span class="shape-icon shape-classic"></span>کلاسیک
+                </button>
+                <button type="button" class="shape-btn" data-shape="sidebar">
+                  <span class="shape-icon shape-sidebar-ico"></span>لای ڕەنگاوڕەنگ
+                </button>
+                <button type="button" class="shape-btn" data-shape="geometric">
+                  <span class="shape-icon shape-geo-ico"></span>ئەندازیاری
+                </button>
+                <button type="button" class="shape-btn" data-shape="overlap">
+                  <span class="shape-icon shape-overlap-ico"></span>کارت
+                </button>
+                <button type="button" class="shape-btn" data-shape="minimal">
+                  <span class="shape-icon shape-minimal-ico"></span>سادە
+                </button>
+              </div>
+
+              <div class="color-row" data-shape-group="classic">
+                <button type="button" class="tpl-btn active" data-tpl="gold"><span class="tpl-swatch swatch-gold"></span>زێڕین</button>
+                <button type="button" class="tpl-btn" data-tpl="blue"><span class="tpl-swatch swatch-blue"></span>شین</button>
+                <button type="button" class="tpl-btn" data-tpl="green"><span class="tpl-swatch swatch-green"></span>سەوز</button>
+                <button type="button" class="tpl-btn" data-tpl="purple"><span class="tpl-swatch swatch-purple"></span>مۆر</button>
+                <button type="button" class="tpl-btn" data-tpl="red"><span class="tpl-swatch swatch-red"></span>سوور</button>
+                <button type="button" class="tpl-btn" data-tpl="teal"><span class="tpl-swatch swatch-teal"></span>شینی دەریایی</button>
+                <button type="button" class="tpl-btn" data-tpl="rose"><span class="tpl-swatch swatch-rose"></span>گوڵاوی</button>
+                <button type="button" class="tpl-btn" data-tpl="charcoal"><span class="tpl-swatch swatch-charcoal"></span>زۆزمی</button>
+                <button type="button" class="tpl-btn" data-tpl="orange"><span class="tpl-swatch swatch-orange"></span>پرتەقاڵی</button>
+                <button type="button" class="tpl-btn" data-tpl="indigo"><span class="tpl-swatch swatch-indigo"></span>شینی تۆخ</button>
+                <button type="button" class="tpl-btn" data-tpl="emerald"><span class="tpl-swatch swatch-emerald"></span>زمروودی</button>
+              </div>
+
+              <div class="color-row" data-shape-group="sidebar" hidden>
+                <button type="button" class="tpl-btn" data-tpl="sidebar"><span class="tpl-swatch swatch-sidebar"></span>زێڕین</button>
+                <button type="button" class="tpl-btn" data-tpl="sidebar-maroon"><span class="tpl-swatch swatch-sidebar-maroon"></span>مۆری تۆخ</button>
+                <button type="button" class="tpl-btn" data-tpl="sidebar-forest"><span class="tpl-swatch swatch-sidebar-forest"></span>سەوزی دارستان</button>
+                <button type="button" class="tpl-btn" data-tpl="sidebar-teal"><span class="tpl-swatch swatch-sidebar-teal"></span>شینی دەریایی</button>
+              </div>
+
+              <div class="color-row" data-shape-group="geometric" hidden>
+                <button type="button" class="tpl-btn" data-tpl="geometric"><span class="tpl-swatch swatch-geometric"></span>شین</button>
+                <button type="button" class="tpl-btn" data-tpl="geometric-purple"><span class="tpl-swatch swatch-geometric-purple"></span>مۆر</button>
+                <button type="button" class="tpl-btn" data-tpl="geometric-red"><span class="tpl-swatch swatch-geometric-red"></span>سوور</button>
+                <button type="button" class="tpl-btn" data-tpl="geometric-emerald"><span class="tpl-swatch swatch-geometric-emerald"></span>زمروودی</button>
+              </div>
+
+              <div class="color-row" data-shape-group="overlap" hidden>
+                <button type="button" class="tpl-btn" data-tpl="overlap"><span class="tpl-swatch swatch-overlap"></span>شینی دەریایی</button>
+                <button type="button" class="tpl-btn" data-tpl="overlap-rose"><span class="tpl-swatch swatch-overlap-rose"></span>گوڵاوی</button>
+                <button type="button" class="tpl-btn" data-tpl="overlap-navy"><span class="tpl-swatch swatch-overlap-navy"></span>ئاسمانی تۆخ</button>
+                <button type="button" class="tpl-btn" data-tpl="overlap-amber"><span class="tpl-swatch swatch-overlap-amber"></span>پرتەقاڵی</button>
+              </div>
+
+              <div class="color-row" data-shape-group="minimal" hidden>
+                <button type="button" class="tpl-btn" data-tpl="minimal"><span class="tpl-swatch swatch-minimal"></span>ڕەش</button>
+                <button type="button" class="tpl-btn" data-tpl="minimal-navy"><span class="tpl-swatch swatch-minimal-navy"></span>ئاسمانی تۆخ</button>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="gallery-done" id="galleryDoneBtn">دان ✓</button>
+        </div>
+      </div>
+
+      <div class="paper" id="paper" data-tpl="gold">
+
+        <div class="p-side">
+          <div class="p-header">
+            <div class="p-photo-wrap">
+              <img id="pPhoto" class="p-photo" alt="" src="">
+              <div class="p-photo-empty" id="pPhotoEmpty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6"></path></svg>
+              </div>
+            </div>
+            <div class="p-header-text">
+              <h1 id="pName">ئاراس ئەحمەد</h1>
+              <div class="p-title" id="pTitle">گەشەپێدەری وێب</div>
+              <div class="p-contact">
+                <span id="pPhone">٠٧٥٠ ١٢٣ ٤٥٦٧</span>
+                <span class="sep">•</span>
+                <span id="pEmail">aras@email.com</span>
+                <span class="sep">•</span>
+                <span id="pCity">هەولێر، کوردستان</span>
+              </div>
+              <div class="p-links" id="pLinks"></div>
+            </div>
+          </div>
+
+          <div class="p-cols">
+            <div class="p-section" id="secSkills">
+              <div class="p-section-title">لێهاتووییەکان</div>
+              <div class="p-tags" id="pSkills"></div>
+            </div>
+            <div class="p-section" id="secLangs">
+              <div class="p-section-title">زمانەکان</div>
+              <div class="p-langs" id="pLangs"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-main">
+          <div class="p-section sec-summary" id="secSummary">
+            <div class="p-section-title">پوختەی کەسی</div>
+            <p id="pSummary" class="p-summary">گەشەپێدەرێکی وێبم بە ٣ ساڵ ئەزموون...</p>
+          </div>
+
+          <div class="p-section sec-objective" id="secObjective">
+            <div class="p-section-title">ئامانجی پیشەیی</div>
+            <p id="pObjective" class="p-summary"></p>
+          </div>
+
+          <div class="p-section sec-experience" id="secExperience">
+            <div class="p-section-title">ئەزموونی کار</div>
+            <div id="pExperience"></div>
+          </div>
+
+          <div class="p-section sec-projects" id="secProjects">
+            <div class="p-section-title">پڕۆژەکان</div>
+            <div id="pProjects"></div>
+          </div>
+
+          <div class="p-section sec-volunteer" id="secVolunteer">
+            <div class="p-section-title">کاری خۆبەخشی</div>
+            <div id="pVolunteer"></div>
+          </div>
+
+          <div class="p-section sec-education" id="secEducation">
+            <div class="p-section-title">خوێندن</div>
+            <div id="pEducation"></div>
+          </div>
+
+          <div class="p-section sec-courses" id="secCourses">
+            <div class="p-section-title">کۆرس و بڕوانامەکان</div>
+            <div id="pCourses"></div>
+          </div>
+
+          <div class="p-section sec-achievements" id="secAchievements">
+            <div class="p-section-title">دەستکەوت و خەڵاتەکان</div>
+            <ul class="p-list" id="pAchievements"></ul>
+          </div>
+
+          <div id="pCustomSections" class="sec-custom"></div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- hidden templates used by JS to clone new rows -->
+  <template id="experienceTpl">
+    <div class="repeat-item" data-role="experience">
+      <div class="repeat-head">
+        <span>ئەزموون</span>
+        <button type="button" class="btn-remove">لابردن</button>
+      </div>
+      <div class="field-row two">
+        <div class="field"><label>ناونیشانی کار</label><input class="e-role" type="text" placeholder="گەشەپێدەری وێب"></div>
+        <div class="field"><label>کۆمپانیا</label><input class="e-company" type="text" placeholder="ناوی کۆمپانیا"></div>
+      </div>
+      <div class="field"><label>ماوە</label><input class="e-dates" type="text" placeholder="٢٠٢٣ - ئێستا"></div>
+      <div class="field"><label>وردەکاری</label><textarea class="e-desc" rows="2" placeholder="ئەرکەکانت بنووسە..."></textarea></div>
+    </div>
+  </template>
+
+  <template id="educationTpl">
+    <div class="repeat-item" data-role="education">
+      <div class="repeat-head">
+        <span>خوێندن</span>
+        <button type="button" class="btn-remove">لابردن</button>
+      </div>
+      <div class="field-row two">
+        <div class="field"><label>بڕوانامە</label><input class="d-degree" type="text" placeholder="بەکالۆریۆس زانستی کۆمپیوتەر"></div>
+        <div class="field"><label>پەیمانگا / زانکۆ</label><input class="d-school" type="text" placeholder="زانکۆی سەلاحەددین"></div>
+      </div>
+      <div class="field"><label>ماوە</label><input class="d-dates" type="text" placeholder="٢٠١٩ - ٢٠٢٣"></div>
+    </div>
+  </template>
+
+  <template id="projectsTpl">
+    <div class="repeat-item" data-role="projects">
+      <div class="repeat-head">
+        <span>پڕۆژە</span>
+        <button type="button" class="btn-remove">لابردن</button>
+      </div>
+      <div class="field"><label>ناوی پڕۆژە</label><input class="j-title" type="text" placeholder="بۆ نموونە: ماڵپەڕی فرۆشگا"></div>
+      <div class="field"><label>لینک (ئارەزوومەندانە)</label><input class="j-link" type="text" placeholder="https://..."></div>
+      <div class="field"><label>کورتەیەک دەربارەی</label><textarea class="j-desc" rows="2" placeholder="پڕۆژەکە چیە و بە چی دروستکراوە..."></textarea></div>
+    </div>
+  </template>
+
+  <template id="volunteerTpl">
+    <div class="repeat-item" data-role="volunteer">
+      <div class="repeat-head">
+        <span>کاری خۆبەخشی</span>
+        <button type="button" class="btn-remove">لابردن</button>
+      </div>
+      <div class="field-row two">
+        <div class="field"><label>ڕۆڵ</label><input class="v-role" type="text" placeholder="خۆبەخش"></div>
+        <div class="field"><label>ڕێکخراو</label><input class="v-org" type="text" placeholder="ناوی ڕێکخراو"></div>
+      </div>
+      <div class="field"><label>ماوە</label><input class="v-dates" type="text" placeholder="٢٠٢٢ - ٢٠٢٣"></div>
+      <div class="field"><label>وردەکاری</label><textarea class="v-desc" rows="2" placeholder="چیت کردووە..."></textarea></div>
+    </div>
+  </template>
+
+  <template id="coursesTpl">
+    <div class="repeat-item" data-role="courses">
+      <div class="repeat-head">
+        <span>کۆرس / بڕوانامە</span>
+        <button type="button" class="btn-remove">لابردن</button>
+      </div>
+      <div class="field-row two">
+        <div class="field"><label>ناوی کۆرس/بڕوانامە</label><input class="c-name" type="text" placeholder="بۆ نموونە: Meta Front-End"></div>
+        <div class="field"><label>دامەزراوە</label><input class="c-org" type="text" placeholder="Coursera, Udemy..."></div>
+      </div>
+      <div class="field"><label>ساڵ</label><input class="c-year" type="text" placeholder="٢٠٢٤"></div>
+    </div>
+  </template>
+
+  <template id="achievementsTpl">
+    <div class="repeat-item" data-role="achievements">
+      <div class="repeat-head">
+        <span>دەستکەوت</span>
+        <button type="button" class="btn-remove">لابردن</button>
+      </div>
+      <div class="field"><label>دەستکەوت یان خەڵات</label><input class="a-text" type="text" placeholder="بۆ نموونە: خەڵاتی یەکەم لە پێشبڕکێی کۆدنووسی"></div>
+      <div class="field"><label>ساڵ (ئارەزوومەندانە)</label><input class="a-year" type="text" placeholder="٢٠٢٤"></div>
+    </div>
+  </template>
+
+  <template id="linksTpl">
+    <div class="repeat-item" data-role="links">
+      <div class="repeat-head">
+        <span>لینک</span>
+        <button type="button" class="btn-remove">لابردن</button>
+      </div>
+      <div class="field-row two">
+        <div class="field"><label>ناوی پلاتفۆرم</label><input class="l-name" type="text" placeholder="tiktok, instagram, github..."></div>
+        <div class="field"><label>لینک</label><input class="l-url" type="text" placeholder="https://..."></div>
+      </div>
+    </div>
+  </template>
+
+  <template id="customTpl">
+    <div class="repeat-item" data-role="custom">
+      <div class="repeat-head">
+        <span>بەشی تایبەت</span>
+        <button type="button" class="btn-remove">لابردن</button>
+      </div>
+      <div class="field"><label>ناونیشانی بەشەکە</label><input class="u-title" type="text" placeholder="بۆ نموونە: هۆبی و ئارەزووەکان"></div>
+      <div class="field"><label>ناوەڕۆک</label><textarea class="u-body" rows="3" placeholder="ناوەڕۆکی ئەم بەشە بنووسە..."></textarea></div>
+    </div>
+  </template>
+
+  <script src="guard.js"></script>
+  <script src="cv-builder.js"></script>
+</body>
+</html>
