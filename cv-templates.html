@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>گالەری دیزاینەکانی CV | Kurd Technology</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="cv-templates-data.js"></script>
+  <style>
+    body {
+      font-family: 'Vazirmatn', sans-serif;
+      background-color: #07090E;
+      color: #F3F4F6;
+      min-height: 100vh;
+    }
+    .kufi { font-family: 'Noto Kufi Arabic', sans-serif; }
+    .linear-glow {
+      background: radial-gradient(circle at 50% -10%, rgba(99, 102, 241, 0.16) 0%, rgba(6, 182, 212, 0.08) 35%, transparent 70%);
+    }
+    .glass-nav {
+      background: rgba(13, 17, 26, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .tpl-card {
+      background: rgba(15, 21, 32, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tpl-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(99, 102, 241, 0.4);
+      box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(99, 102, 241, 0.2);
+    }
+    .tpl-card.is-active {
+      border-color: #06B6D4;
+      box-shadow: 0 0 0 2px #06B6D4, 0 20px 40px -10px rgba(6, 182, 212, 0.3);
+    }
+    .tab-pill {
+      transition: all 0.2s ease;
+    }
+    .tab-pill.active {
+      background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
+      color: #FFFFFF;
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+    }
+  </style>
+</head>
+<body class="relative min-h-screen">
+  <div class="fixed inset-0 linear-glow pointer-events-none z-0"></div>
+
+  <!-- Top Navbar -->
+  <header class="glass-nav sticky top-0 z-40 px-4 sm:px-8 py-3.5 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <a href="cv-builder.html" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white transition-all">
+        <svg class="w-5 h-5 transform rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+      </a>
+      <div>
+        <h1 class="kufi text-sm sm:text-base font-bold text-white flex items-center gap-2">
+          <span>گالەری دیزاینەکانی CV</span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">٧٥ دیزاین</span>
+        </h1>
+        <p class="text-[11px] text-slate-400 hidden sm:block">دیزاینی دڵخوازی خۆت هەڵبژێرە، ڕاستەوخۆ دەخرێتە سەر سیڤییەکەت</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 sm:gap-3">
+      <a href="cv-builder.html" class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-indigo-500/20 flex items-center gap-2 transition-all">
+        <span>گەڕانەوە بۆ CV</span>
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- Hero Header -->
+    <div class="text-center max-w-2xl mx-auto mb-8">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-medium mb-3">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+        <span>دیزاینی کوالێتی بەرز • شایستەی بازاڕی کار</span>
+      </div>
+      <h2 class="kufi text-2xl sm:text-3xl font-extrabold text-white mb-2 leading-tight">
+        شێوازی پێشکەشکردنی کەسایەتیت هەڵبژێرە
+      </h2>
+      <p class="text-sm text-slate-400">
+        هەموو دیزاینەکان بە وردی بە تەواوی ستانداردە نێودەوڵەتییەکان دروستکراون. هەر دیزاینێک هەڵبژێریت، زانیارییەکانت وەک خۆیان دەمێننەوە.
+      </p>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <div class="mb-8 space-y-4">
+      <div class="flex flex-col sm:flex-row items-center gap-3">
+        <div class="relative w-full sm:w-80">
+          <input type="text" id="searchInput" placeholder="گەڕان بەپێی ناوی دیزاین یان ڕەنگ..." 
+            class="w-full py-2.5 pr-10 pl-4 rounded-xl bg-[#0D121D] border border-white/10 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-cyan-500/50 transition-all">
+          <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </div>
+        </div>
+
+        <div class="text-xs text-slate-400 mr-auto flex items-center gap-1.5">
+          <span>دیزاینی ئێستا:</span>
+          <span id="currentTemplateName" class="font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">زێڕین</span>
+        </div>
+      </div>
+
+      <!-- Categories Tabs -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-2" id="categoriesBar">
+        <button type="button" class="tab-pill active px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10" data-cat="all">
+          هەموو (٧٥)
+        </button>
+        <button type="button" class="tab-pill px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10" data-cat="kurd">
+          کوردستانی و شاخ
+        </button>
+        <button type="button" class="tab-pill px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10" data-cat="dark">
+          دارک مۆدی لوکس
+        </button>
+        <button type="button" class="tab-pill px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10" data-cat="sidebar">
+          سایدبار و دوو ستوون
+        </button>
+        <button type="button" class="tab-pill px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10" data-cat="geo">
+          ئەندازیاری
+        </button>
+        <button type="button" class="tab-pill px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10" data-cat="grad">
+          گرادیێنت و مۆدێرن
+        </button>
+        <button type="button" class="tab-pill px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10" data-cat="corp">
+          فەرمی و پزیشکی
+        </button>
+        <button type="button" class="tab-pill px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10" data-cat="classic">
+          کلاسیک
+        </button>
+      </div>
+    </div>
+
+    <!-- 3 COLUMNS GRID -->
+    <div id="templatesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Generated dynamically by script -->
+    </div>
+
+    <div id="noResultsNotice" class="hidden text-center py-16">
+      <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400">
+        <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </div>
+      <h3 class="text-base font-bold text-white mb-1">هیچ دیزاینێک نەدۆزرایەوە</h3>
+      <p class="text-xs text-slate-400">تکایە گەڕانەکەت بگۆڕە یان فلتەرەکە لابدە.</p>
+    </div>
+
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'cvTemplateChoice';
+    let currentSelected = localStorage.getItem(STORAGE_KEY) || 'gold';
+    let activeCat = 'all';
+    let searchQ = '';
+
+    const gridEl = document.getElementById('templatesGrid');
+    const searchInput = document.getElementById('searchInput');
+    const noResults = document.getElementById('noResultsNotice');
+    const currentNameEl = document.getElementById('currentTemplateName');
+    const catButtons = document.querySelectorAll('.tab-pill');
+
+    function updateCurrentName() {
+      const match = window.CV_TEMPLATES.find(t => t.id === currentSelected);
+      if (match) {
+        currentNameEl.textContent = match.name;
+      }
+    }
+
+    function selectTemplate(tplId) {
+      currentSelected = tplId;
+      try {
+        localStorage.setItem(STORAGE_KEY, tplId);
+      } catch (e) {}
+
+      updateCurrentName();
+      renderGrid();
+
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-semibold shadow-2xl flex items-center gap-2 border border-emerald-400/30';
+      toast.innerHTML = `<span>✓ دیزاینەکە هەڵبژێردرا! دەگەڕێیتەوە بۆ سەر سیڤییەکەت...</span>`;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        window.location.href = 'cv-builder.html';
+      }, 700);
+    }
+
+    function renderGrid() {
+      const filtered = window.CV_TEMPLATES.filter(tpl => {
+        const matchesCat = (activeCat === 'all') || (tpl.category === activeCat);
+        const matchesSearch = !searchQ || 
+          tpl.name.toLowerCase().includes(searchQ.toLowerCase()) || 
+          tpl.desc.toLowerCase().includes(searchQ.toLowerCase()) ||
+          tpl.categoryName.toLowerCase().includes(searchQ.toLowerCase());
+        return matchesCat && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        gridEl.innerHTML = '';
+        noResults.classList.remove('hidden');
+        return;
+      }
+
+      noResults.classList.add('hidden');
+      gridEl.innerHTML = filtered.map(tpl => {
+        const isSelected = tpl.id === currentSelected;
+        const svgContent = window.renderTemplateCardSVG(tpl);
+
+        return `
+          <div class="tpl-card rounded-2xl p-4 flex flex-col justify-between cursor-pointer group ${isSelected ? 'is-active' : ''}" onclick="selectTemplate('${tpl.id}')">
+            
+            <div class="relative w-full aspect-[220/280] rounded-xl overflow-hidden mb-3.5 bg-[#090D15] p-2 border border-white/5 flex items-center justify-center">
+              ${svgContent}
+              
+              ${tpl.badge ? `
+                <div class="absolute top-3 right-3 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold shadow-md">
+                  ${tpl.badge}
+                </div>
+              ` : ''}
+
+              ${isSelected ? `
+                <div class="absolute inset-0 bg-cyan-950/40 backdrop-blur-[2px] rounded-xl flex items-center justify-center">
+                  <span class="px-4 py-1.5 rounded-full bg-cyan-500 text-black font-bold text-xs shadow-lg flex items-center gap-1.5">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span>هەڵبژێردراو</span>
+                  </span>
+                </div>
+              ` : `
+                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
+                  <span class="px-4 py-2 rounded-xl bg-white text-slate-900 font-bold text-xs shadow-xl transform scale-95 group-hover:scale-100 transition-transform flex items-center gap-1.5">
+                    <span>بەکارینان لە CV</span>
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                  </span>
+                </div>
+              `}
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-1">
+                <h3 class="font-bold text-white text-sm group-hover:text-cyan-400 transition-colors truncate">${tpl.name}</h3>
+                <span class="w-3.5 h-3.5 rounded-full flex-shrink-0 border border-white/20 shadow-sm" style="background-color: ${tpl.accent}"></span>
+              </div>
+              
+              <div class="flex items-center justify-between text-[11px] text-slate-400 mb-2">
+                <span>${tpl.categoryName}</span>
+                <span class="font-mono text-[10px] text-slate-500">ID: ${tpl.id}</span>
+              </div>
+
+              <p class="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                ${tpl.desc}
+              </p>
+            </div>
+
+            <button type="button" class="mt-4 w-full py-2.5 px-3 rounded-xl ${isSelected ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10'} text-xs font-semibold flex items-center justify-center gap-1.5 transition-all">
+              ${isSelected ? '<span>دیزاینی هەڵبژێردراوی تۆیە ✓</span>' : '<span>هەڵبژاردنی ئەم دیزاینە</span>'}
+            </button>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    catButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        catButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeCat = btn.dataset.cat;
+        renderGrid();
+      });
+    });
+
+    searchInput.addEventListener('input', (e) => {
+      searchQ = e.target.value.trim();
+      renderGrid();
+    });
+
+    updateCurrentName();
+    renderGrid();
+  </script>
+</body>
+</html>
