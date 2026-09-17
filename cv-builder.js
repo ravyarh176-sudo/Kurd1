@@ -1,545 +1,381 @@
+// Kurd Technology — CV Builder (Front-End Core Engine)
 (function () {
+  'use strict';
+
+  // ---------- Helpers ----------
   const $ = (id) => document.getElementById(id);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-  function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
+  const DEFAULT_PHOTO_SRC =
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'><rect width='160' height='160' fill='%231b2438'/><circle cx='80' cy='62' r='28' fill='%23fdba12' opacity='0.85'/><path d='M36 136 c0 -26 20 -44 44 -44 s44 18 44 44 Z' fill='%23fdba12' opacity='0.85'/></svg>";
 
-  // ---------- Simple text fields -> live preview ----------
-  const simpleBindings = [
-    ['fName', 'pName'],
-    ['fTitle', 'pTitle'],
-    ['fPhone', 'pPhone'],
-    ['fEmail', 'pEmail'],
-    ['fCity', 'pCity'],
-    ['fSummary', 'pSummary'],
-    ['fObjective', 'pObjective']
-  ];
+  // ---------- Live Mirroring (Inputs -> Preview Paper) ----------
+  function initMirroring() {
+    const map = [
+      ['fName', 'pName', 'محمد احمد'],
+      ['fTitle', 'pTitle', 'گەشەپێدەری وێب و نەرمەکاڵا'],
+      ['fEmail', 'pEmail', 'muhammad@example.com'],
+      ['fPhone', 'pPhone', '+964 750 000 0000'],
+      ['fAddress', 'pAddress', 'هەولێر، کوردستان'],
+      ['fSummary', 'pSummary', 'گەشەپێدەرێکی لێهاتوو بە ئەزموونی ٥ ساڵ لە بواری دروستکردنی ماڵپەڕ و سیستەمی بەڕێوەبردن.'],
+      ['fObjective', 'pObjective', 'ئامانجم بەدەستهێنانی پێگەیەکی کارییە کە بتوانم تواناکانم بەکاربهێنم بۆ گەشەپێدانی پڕۆژە پێشکەوتووەکان.']
+    ];
 
-  function bindSimple() {
-    simpleBindings.forEach(([inputId, outId]) => {
+    map.forEach(([inputId, previewId, fallback]) => {
       const input = $(inputId);
-      const out = $(outId);
-      if (!input || !out) return;
-      const sync = () => { out.textContent = input.value.trim() || out.dataset.placeholder || ''; };
-      out.dataset.placeholder = out.textContent;
-      input.addEventListener('input', () => { sync(); updateOptionalSections(); });
-      sync();
-    });
-  }
+      const preview = $(previewId);
+      if (!input || !preview) return;
 
-  // ---------- Smart social links ----------
-  const PLATFORM_MAP = [
-    { keys: ['tiktok', 'tik tok', 'تیکتۆک'], label: 'TikTok', color: '#000000', icon: '<path d="M16 3c.3 2 1.8 3.6 4 4v3.2c-1.5 0-2.9-.4-4-1.2v6.4A5.6 5.6 0 1 1 10.6 9.8v3.4a2.2 2.2 0 1 0 2.2 2.2V3H16z"/>' },
-    { keys: ['instagram', 'insta', 'ئینستاگرام'], label: 'Instagram', color: '#C13584', icon: '<rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.2" cy="6.8" r="1.1"/>' },
-    { keys: ['facebook', 'fb', 'فەیسبووک'], label: 'Facebook', color: '#1877F2', icon: '<path d="M14 21v-7h2.4l.4-3H14V9c0-.9.2-1.5 1.6-1.5H17V5c-.3 0-1.3-.1-2.4-.1-2.4 0-4.1 1.5-4.1 4.2V11H8v3h2.5v7H14z"/>' },
-    { keys: ['x.com', 'twitter', 'ئێکس'], label: 'X', color: '#000000', icon: '<path d="M4 4l16 16M20 4L4 20" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/>' },
-    { keys: ['linkedin', 'لینکدئین'], label: 'LinkedIn', color: '#0A66C2', icon: '<rect x="3" y="3" width="18" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="8.5" r="1.2"/><line x1="8" y1="11.5" x2="8" y2="17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 17v-3.5c0-1.4 1-2.2 2.2-2.2s2 .8 2 2.2V17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' },
-    { keys: ['github', 'گیتهەب'], label: 'GitHub', color: '#181717', icon: '<path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.1.39-1.99 1.03-2.7-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.3 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.71 1.03 1.6 1.03 2.7 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .26.18.58.69.48A10 10 0 0 0 12 2z"/>' },
-    { keys: ['youtube', 'یوتیوب'], label: 'YouTube', color: '#FF0000', icon: '<rect x="2.5" y="5.5" width="19" height="13" rx="4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 9l6 3-6 3z"/>' },
-    { keys: ['telegram', 'تلگرام'], label: 'Telegram', color: '#26A5E4', icon: '<path d="M21 4 3 11l6 2m12-9-3.5 16-8.5-6m12-10L9.5 13"/>' },
-    { keys: ['snapchat', 'سنابچات'], label: 'Snapchat', color: '#111111', icon: '<path d="M12 4c2.8 0 4.4 2 4.4 4.6 0 1 0 2.3.3 3 .3.6 1 1 1.8 1.2-.1.6-1 1-1.7 1.2 0 .5-.2 1.4-.7 1.7-.6.4-1.7.1-2.4.4-.7.3-1 1.3-1.7 1.3s-1-1-1.7-1.3c-.7-.3-1.8 0-2.4-.4-.5-.3-.7-1.2-.7-1.7-.7-.2-1.6-.6-1.7-1.2.8-.2 1.5-.6 1.8-1.2.3-.7.3-2 .3-3C7.6 6 9.2 4 12 4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>' },
-    { keys: ['whatsapp', 'واتساپ'], label: 'WhatsApp', color: '#25D366', icon: '<path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8.5 8.8c.2-.6.5-.6.8-.6h.5c.2 0 .4 0 .6.5l.6 1.5c.1.2 0 .4-.1.6l-.4.5c-.1.2-.1.3 0 .5.5 1 1.3 1.7 2.3 2.1.2.1.3.1.5-.1l.5-.6c.1-.2.3-.2.5-.1l1.4.7c.2.1.3.2.3.4 0 1-1.2 1.7-2.1 1.7-2.6 0-5.4-2.8-5.4-5.4 0-.4 0-.7.1-1.1z"/>' },
-    { keys: ['pinterest', 'پینتریست'], label: 'Pinterest', color: '#E60023', icon: '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9.5 18c.4-1.6 1-4.1 1.4-5.8m2.6-3.7a2.4 2.4 0 1 1 3 2.3c-.2 1.7-1 3-2.3 3-1 0-1.6-.6-1.4-1.6.2-1 .7-2.1.7-2.9 0-.7-.4-1.3-1.1-1.3-.9 0-1.6 1-1.6 2.3 0 .8.2 1.4.2 1.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>' },
-    { keys: ['behance', 'بیهانس'], label: 'Behance', color: '#1769FF', icon: '<text x="4" y="17" font-size="13" font-weight="700" fill="currentColor">Bē</text>' }
-  ];
-  const DEFAULT_PLATFORM = { label: 'لینک', color: '#6B7280', icon: '<path d="M9.5 14.5l5-5m-4-1.5 1-1a3.5 3.5 0 0 1 5 5l-1 1m-6.5 1.5-1 1a3.5 3.5 0 0 1-5-5l1-1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' };
-
-  function detectPlatform(name) {
-    const n = (name || '').trim().toLowerCase();
-    if (!n) return DEFAULT_PLATFORM;
-    const found = PLATFORM_MAP.find(p => p.keys.some(k => n.includes(k)));
-    return found || { ...DEFAULT_PLATFORM, label: name.trim() };
-  }
-
-  function addLinkItem() {
-    const tpl = $('linksTpl');
-    const list = $('linksList');
-    const node = tpl.content.firstElementChild.cloneNode(true);
-    node.querySelector('.btn-remove').addEventListener('click', () => { node.remove(); renderLinks(); });
-    node.querySelectorAll('input').forEach(el => el.addEventListener('input', renderLinks));
-    list.appendChild(node);
-    renderLinks();
-  }
-
-  function renderLinks() {
-    const list = $('linksList');
-    const target = $('pLinks');
-    const items = Array.from(list.querySelectorAll('.repeat-item'));
-    target.innerHTML = '';
-
-    items.forEach(item => {
-      const name = item.querySelector('.l-name').value.trim();
-      let url = item.querySelector('.l-url').value.trim();
-      if (!name || !url) return;
-      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-      const platform = detectPlatform(name);
-
-      const a = document.createElement('a');
-      a.className = 'p-link-chip';
-      a.href = url;
-      a.target = '_blank';
-      a.rel = 'noopener';
-      a.style.setProperty('--link-color', platform.color);
-      a.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor">${platform.icon}</svg><span>${escapeHtml(platform.label)}</span>`;
-      target.appendChild(a);
-    });
-  }
-
-  // ---------- Repeatable sections: config-driven ----------
-  // Each kind clones its <template>, wires remove/inputs, and re-renders
-  // its own preview list whenever anything in it changes.
-  const KINDS = {
-    experience: {
-      tplId: 'experienceTpl', listId: 'experienceList', previewId: 'pExperience',
-      render(item) {
-        const role = item.querySelector('.e-role').value.trim() || 'ناونیشانی کار';
-        const company = item.querySelector('.e-company').value.trim();
-        const dates = item.querySelector('.e-dates').value.trim();
-        const desc = item.querySelector('.e-desc').value.trim();
-        return `
-          <div class="p-item-head">
-            <span class="p-item-role">${escapeHtml(role)}${company ? ' — ' + escapeHtml(company) : ''}</span>
-            <span class="p-item-dates">${escapeHtml(dates)}</span>
-          </div>
-          ${desc ? `<div class="p-item-desc">${escapeHtml(desc)}</div>` : ''}`;
-      }
-    },
-    education: {
-      tplId: 'educationTpl', listId: 'educationList', previewId: 'pEducation',
-      render(item) {
-        const degree = item.querySelector('.d-degree').value.trim() || 'بڕوانامە';
-        const school = item.querySelector('.d-school').value.trim();
-        const dates = item.querySelector('.d-dates').value.trim();
-        return `
-          <div class="p-item-head">
-            <span class="p-item-role">${escapeHtml(degree)}</span>
-            <span class="p-item-dates">${escapeHtml(dates)}</span>
-          </div>
-          ${school ? `<div class="p-item-sub">${escapeHtml(school)}</div>` : ''}`;
-      }
-    },
-    projects: {
-      tplId: 'projectsTpl', listId: 'projectsList', previewId: 'pProjects', sectionId: 'secProjects',
-      render(item) {
-        const title = item.querySelector('.j-title').value.trim() || 'ناوی پڕۆژە';
-        const link = item.querySelector('.j-link').value.trim();
-        const desc = item.querySelector('.j-desc').value.trim();
-        return `
-          <div class="p-item-head">
-            <span class="p-item-role">${escapeHtml(title)}</span>
-            ${link ? `<a class="p-item-dates" href="${escapeHtml(/^https?:\/\//i.test(link) ? link : 'https://' + link)}" target="_blank" rel="noopener">لینک</a>` : ''}
-          </div>
-          ${desc ? `<div class="p-item-desc">${escapeHtml(desc)}</div>` : ''}`;
-      }
-    },
-    volunteer: {
-      tplId: 'volunteerTpl', listId: 'volunteerList', previewId: 'pVolunteer', sectionId: 'secVolunteer',
-      render(item) {
-        const role = item.querySelector('.v-role').value.trim() || 'ڕۆڵ';
-        const org = item.querySelector('.v-org').value.trim();
-        const dates = item.querySelector('.v-dates').value.trim();
-        const desc = item.querySelector('.v-desc').value.trim();
-        return `
-          <div class="p-item-head">
-            <span class="p-item-role">${escapeHtml(role)}${org ? ' — ' + escapeHtml(org) : ''}</span>
-            <span class="p-item-dates">${escapeHtml(dates)}</span>
-          </div>
-          ${desc ? `<div class="p-item-desc">${escapeHtml(desc)}</div>` : ''}`;
-      }
-    },
-    courses: {
-      tplId: 'coursesTpl', listId: 'coursesList', previewId: 'pCourses', sectionId: 'secCourses',
-      render(item) {
-        const name = item.querySelector('.c-name').value.trim() || 'ناوی کۆرس';
-        const org = item.querySelector('.c-org').value.trim();
-        const year = item.querySelector('.c-year').value.trim();
-        return `
-          <div class="p-item-head">
-            <span class="p-item-role">${escapeHtml(name)}</span>
-            <span class="p-item-dates">${escapeHtml(year)}</span>
-          </div>
-          ${org ? `<div class="p-item-sub">${escapeHtml(org)}</div>` : ''}`;
-      }
-    }
-  };
-
-  function addRepeatItem(kind) {
-    const cfg = KINDS[kind];
-    const tpl = $(cfg.tplId);
-    const list = $(cfg.listId);
-    const node = tpl.content.firstElementChild.cloneNode(true);
-
-    node.querySelector('.btn-remove').addEventListener('click', () => {
-      node.remove();
-      renderKind(kind);
-    });
-    node.querySelectorAll('input, textarea').forEach(el => {
-      el.addEventListener('input', () => renderKind(kind));
-    });
-
-    list.appendChild(node);
-    renderKind(kind);
-  }
-
-  function renderKind(kind) {
-    const cfg = KINDS[kind];
-    const list = $(cfg.listId);
-    const target = $(cfg.previewId);
-    const items = Array.from(list.querySelectorAll('.repeat-item'));
-
-    if (!items.length) {
-      target.innerHTML = '<span class="empty-hint">هیچ زانیارییەک زیاد نەکراوە</span>';
-    } else {
-      target.innerHTML = '';
-      items.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'p-item';
-        div.innerHTML = cfg.render(item);
-        target.appendChild(div);
-      });
-    }
-    updateOptionalSections();
-  }
-
-  // ---------- Achievements: a simple bullet-point list ----------
-  function addAchievement() {
-    const tpl = $('achievementsTpl');
-    const list = $('achievementsList');
-    const node = tpl.content.firstElementChild.cloneNode(true);
-
-    node.querySelector('.btn-remove').addEventListener('click', () => {
-      node.remove();
-      renderAchievements();
-    });
-    node.querySelectorAll('input').forEach(el => {
-      el.addEventListener('input', renderAchievements);
-    });
-
-    list.appendChild(node);
-    renderAchievements();
-  }
-
-  function renderAchievements() {
-    const list = $('achievementsList');
-    const target = $('pAchievements');
-    const items = Array.from(list.querySelectorAll('.repeat-item'));
-
-    if (!items.length) {
-      target.innerHTML = '<span class="empty-hint">هیچ زانیارییەک زیاد نەکراوە</span>';
-    } else {
-      target.innerHTML = '';
-      items.forEach(item => {
-        const text = item.querySelector('.a-text').value.trim();
-        if (!text) return;
-        const year = item.querySelector('.a-year').value.trim();
-        const li = document.createElement('li');
-        li.innerHTML = escapeHtml(text) + (year ? ` <span class="a-year">(${escapeHtml(year)})</span>` : '');
-        target.appendChild(li);
-      });
-      if (!target.children.length) {
-        target.innerHTML = '<span class="empty-hint">هیچ زانیارییەک زیاد نەکراوە</span>';
-      }
-    }
-    updateOptionalSections();
-  }
-
-  // ---------- Hide optional sections entirely when they have no content ----------
-  function updateOptionalSections() {
-    const fObjective = $('fObjective');
-    if (fObjective) {
-      setSectionVisible('secObjective', fObjective.value.trim().length > 0);
-    }
-    ['projects', 'volunteer', 'courses'].forEach(kind => {
-      const cfg = KINDS[kind];
-      const hasContent = $(cfg.listId).querySelectorAll('.repeat-item').length > 0;
-      setSectionVisible(cfg.sectionId, hasContent);
-    });
-    const achList = $('achievementsList');
-    if (achList) {
-      setSectionVisible('secAchievements', achList.querySelectorAll('.repeat-item').length > 0);
-    }
-  }
-
-  // ---------- Section visibility toggles ("show/hide on the CV, my choice") ----------
-  const manualToggleState = {}; // sectionId -> user's checkbox choice (true = allowed to show)
-  const contentState = {};      // sectionId -> whether it currently has content (only relevant for optional ones)
-
-  function setSectionVisible(sectionId, hasContent) {
-    contentState[sectionId] = hasContent;
-    applySectionVisibility(sectionId);
-  }
-
-  function applySectionVisibility(sectionId) {
-    const el = $(sectionId);
-    if (!el) return;
-    const userWantsIt = manualToggleState[sectionId] !== false; // default true
-    const contentOk = sectionId in contentState ? contentState[sectionId] : true;
-    el.hidden = !(userWantsIt && contentOk);
-  }
-
-  function initSectionToggles() {
-    document.querySelectorAll('.sec-toggle').forEach(label => {
-      const targetId = label.dataset.target;
-      const checkbox = label.querySelector('input');
-      manualToggleState[targetId] = checkbox.checked;
-      checkbox.addEventListener('change', () => {
-        manualToggleState[targetId] = checkbox.checked;
-        applySectionVisibility(targetId);
-      });
-    });
-  }
-
-  // ---------- Skills & Languages: easy "type + add" chips ----------
-  const LEVEL_LABELS = { '5': 'زمانی دایک', '4': 'زۆر باش', '3': 'باش', '2': 'مامناوەند', '1': 'سەرەتایی' };
-
-  const skillsData = [];
-  const langsData = []; // { name, level }
-
-  function renderSkills() {
-    const chipsEl = $('skillChips');
-    const previewEl = $('pSkills');
-    chipsEl.innerHTML = '';
-    previewEl.innerHTML = '';
-
-    if (!skillsData.length) {
-      previewEl.innerHTML = '<span class="empty-hint">هیچ نییە</span>';
-      return;
-    }
-    skillsData.forEach((skill, i) => {
-      const chip = document.createElement('span');
-      chip.className = 'chip';
-      chip.innerHTML = `${escapeHtml(skill)} <button type="button" class="chip-remove" aria-label="سڕینەوە">✕</button>`;
-      chip.querySelector('.chip-remove').addEventListener('click', () => {
-        skillsData.splice(i, 1);
-        renderSkills();
-      });
-      chipsEl.appendChild(chip);
-
-      const tag = document.createElement('span');
-      tag.className = 'p-tag';
-      tag.textContent = skill;
-      previewEl.appendChild(tag);
-    });
-  }
-
-  function addSkill() {
-    const input = $('skillInput');
-    const val = input.value.trim();
-    if (!val) return;
-    skillsData.push(val);
-    input.value = '';
-    input.focus();
-    renderSkills();
-  }
-
-  function renderLangs() {
-    const chipsEl = $('langChips');
-    const previewEl = $('pLangs');
-    chipsEl.innerHTML = '';
-    previewEl.innerHTML = '';
-
-    if (!langsData.length) {
-      previewEl.innerHTML = '<span class="empty-hint">هیچ نییە</span>';
-      return;
-    }
-    langsData.forEach((lang, i) => {
-      const chip = document.createElement('span');
-      chip.className = 'chip';
-      chip.innerHTML = `${escapeHtml(lang.name)} <span class="lvl-tag">${LEVEL_LABELS[lang.level]}</span> <button type="button" class="chip-remove" aria-label="سڕینەوە">✕</button>`;
-      chip.querySelector('.chip-remove').addEventListener('click', () => {
-        langsData.splice(i, 1);
-        renderLangs();
-      });
-      chipsEl.appendChild(chip);
-
-      const item = document.createElement('div');
-      item.className = 'p-lang-item';
-      item.innerHTML = `
-        <div class="p-lang-name"><span>${escapeHtml(lang.name)}</span><small>${LEVEL_LABELS[lang.level]}</small></div>
-        <div class="p-lang-bar"><div class="p-lang-fill" style="width:${lang.level * 20}%"></div></div>`;
-      previewEl.appendChild(item);
-    });
-  }
-
-  function addLang() {
-    const input = $('langInput');
-    const val = input.value.trim();
-    if (!val) return;
-    const level = $('langLevel').value;
-    langsData.push({ name: val, level });
-    input.value = '';
-    input.focus();
-    renderLangs();
-  }
-
-  function initChipInputs() {
-    $('skillAddBtn').addEventListener('click', addSkill);
-    $('skillInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addSkill(); } });
-    $('langAddBtn').addEventListener('click', addLang);
-    $('langInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addLang(); } });
-
-    // seed with sensible defaults
-    ['JavaScript', 'React', 'HTML/CSS', 'کارتیمی'].forEach(s => skillsData.push(s));
-    langsData.push({ name: 'کوردی', level: '5' });
-    langsData.push({ name: 'ئینگلیزی', level: '4' });
-    langsData.push({ name: 'عەرەبی', level: '2' });
-    renderSkills();
-    renderLangs();
-  }
-
-  // ---------- Personal photo: drag-to-position + zoom, rendered via canvas ----------
-  function initPhotoEditor() {
-    const frame = $('photoFrame');
-    const canvas = $('photoCanvas');
-    const placeholder = $('photoPlaceholder');
-    const removeBtn = $('photoRemove');
-    const fileInput = $('photoInput');
-    const zoomSlider = $('photoZoom');
-    const pPhoto = $('pPhoto');
-    const pPhotoEmpty = $('pPhotoEmpty');
-    if (!frame || !canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
-
-    let img = null;
-    let baseScale = 1;
-    let userZoom = 1;
-    let offX = 0, offY = 0;
-    let dragging = false;
-    let startX = 0, startY = 0, startOffX = 0, startOffY = 0;
-
-    function clampOffsets() {
-      const scale = baseScale * userZoom;
-      const dw = img.naturalWidth * scale;
-      const dh = img.naturalHeight * scale;
-      const minX = Math.min(0, W - dw);
-      const minY = Math.min(0, H - dh);
-      offX = Math.max(minX, Math.min(0, offX));
-      offY = Math.max(minY, Math.min(0, offY));
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, W, H);
-      if (!img) return;
-      const scale = baseScale * userZoom;
-      const dw = img.naturalWidth * scale;
-      const dh = img.naturalHeight * scale;
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(W / 2, H / 2, W / 2, 0, Math.PI * 2);
-      ctx.clip();
-      ctx.drawImage(img, offX, offY, dw, dh);
-      ctx.restore();
-      syncToPreview();
-    }
-
-    function syncToPreview() {
-      if (!pPhoto) return;
-      const url = canvas.toDataURL('image/png');
-      pPhoto.src = url;
-      pPhoto.classList.add('has-img');
-      if (pPhotoEmpty) pPhotoEmpty.style.display = 'none';
-    }
-
-    function loadFile(file) {
-      if (!file || !file.type.startsWith('image/')) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const image = new Image();
-        image.onload = () => {
-          img = image;
-          baseScale = Math.max(W / img.naturalWidth, H / img.naturalHeight);
-          userZoom = 1;
-          offX = (W - img.naturalWidth * baseScale) / 2;
-          offY = (H - img.naturalHeight * baseScale) / 2;
-          zoomSlider.value = 1;
-          zoomSlider.disabled = false;
-          placeholder.classList.add('hidden');
-          removeBtn.classList.add('show');
-          draw();
-        };
-        image.src = e.target.result;
+      const update = () => {
+        const val = (input.value || '').trim();
+        preview.textContent = val || fallback;
       };
-      reader.readAsDataURL(file);
-    }
 
-    fileInput.addEventListener('change', (e) => {
-      if (e.target.files && e.target.files[0]) loadFile(e.target.files[0]);
+      input.addEventListener('input', update);
+      update();
     });
-
-    zoomSlider.addEventListener('input', () => {
-      if (!img) return;
-      userZoom = parseFloat(zoomSlider.value);
-      clampOffsets();
-      draw();
-    });
-
-    removeBtn.addEventListener('click', () => {
-      img = null;
-      ctx.clearRect(0, 0, W, H);
-      placeholder.classList.remove('hidden');
-      removeBtn.classList.remove('show');
-      zoomSlider.value = 1;
-      zoomSlider.disabled = true;
-      if (pPhoto) { pPhoto.src = ''; pPhoto.classList.remove('has-img'); }
-      if (pPhotoEmpty) pPhotoEmpty.style.display = '';
-    });
-
-    function pointerDown(e) {
-      if (!img) return;
-      dragging = true;
-      const p = 'touches' in e ? e.touches[0] : e;
-      startX = p.clientX; startY = p.clientY;
-      startOffX = offX; startOffY = offY;
-    }
-    function pointerMove(e) {
-      if (!dragging || !img) return;
-      const p = 'touches' in e ? e.touches[0] : e;
-      offX = startOffX + (p.clientX - startX);
-      offY = startOffY + (p.clientY - startY);
-      clampOffsets();
-      draw();
-      e.preventDefault();
-    }
-    function pointerUp() { dragging = false; }
-
-    frame.addEventListener('pointerdown', pointerDown);
-    window.addEventListener('pointermove', pointerMove, { passive: false });
-    window.addEventListener('pointerup', pointerUp);
   }
 
-  // ---------- Template picker (shape + color, inside the design gallery) ----------
+  // ---------- Experience Dynamic List ----------
+  function initExperience() {
+    const list = $('expList');
+    const addBtn = $('addExpBtn');
+    const pContainer = $('pExpList');
+    if (!list || !addBtn || !pContainer) return;
+
+    function renderPreview() {
+      const items = Array.from(list.children);
+      if (!items.length) {
+        pContainer.innerHTML = '<p class="p-item-desc" style="opacity:.6">هیچ ئەزموونێک زیاد نەکراوە.</p>';
+        return;
+      }
+      pContainer.innerHTML = items
+        .map((item) => {
+          const role = item.querySelector('.exp-role')?.value.trim() || 'ناونیشانی کار';
+          const comp = item.querySelector('.exp-comp')?.value.trim() || 'کۆمپانیا';
+          const date = item.querySelector('.exp-date')?.value.trim() || '٢٠٢١ - ئێستا';
+          const desc = item.querySelector('.exp-desc')?.value.trim() || '';
+          return `
+            <div class="p-item">
+              <div class="p-item-head">
+                <div class="p-item-role">${escapeHtml(role)}</div>
+                <div class="p-item-date">${escapeHtml(date)}</div>
+              </div>
+              <div class="p-item-sub">${escapeHtml(comp)}</div>
+              ${desc ? `<div class="p-item-desc">${escapeHtml(desc)}</div>` : ''}
+            </div>
+          `;
+        })
+        .join('');
+    }
+
+    function addRow(role = '', comp = '', date = '', desc = '') {
+      const row = document.createElement('div');
+      row.className = 'dyn-row';
+      row.innerHTML = `
+        <div class="dyn-grid">
+          <input type="text" class="exp-role" placeholder="ناونیشانی کار (وەک: گەشەپێدەری وێب)" value="${escapeAttr(role)}">
+          <input type="text" class="exp-comp" placeholder="کۆمپانیا یان شوێنی کار" value="${escapeAttr(comp)}">
+          <input type="text" class="exp-date" placeholder="ماوە (وەک: ٢٠٢١ - ٢٠٢٣)" value="${escapeAttr(date)}">
+        </div>
+        <textarea class="exp-desc" rows="2" placeholder="باسی ئەرک و دەستکەوتەکانت لەم کارەدا بکە...">${escapeHtml(desc)}</textarea>
+        <button type="button" class="del-row-btn" title="سڕینەوە">✕ سڕینەوە</button>
+      `;
+      row.querySelectorAll('input, textarea').forEach((el) => el.addEventListener('input', renderPreview));
+      row.querySelector('.del-row-btn').addEventListener('click', () => {
+        row.remove();
+        renderPreview();
+      });
+      list.appendChild(row);
+      renderPreview();
+    }
+
+    addBtn.addEventListener('click', () => addRow());
+    window.__addExpRow = addRow;
+  }
+
+  // ---------- Education Dynamic List ----------
+  function initEducation() {
+    const list = $('eduList');
+    const addBtn = $('addEduBtn');
+    const pContainer = $('pEduList');
+    if (!list || !addBtn || !pContainer) return;
+
+    function renderPreview() {
+      const items = Array.from(list.children);
+      if (!items.length) {
+        pContainer.innerHTML = '<p class="p-item-desc" style="opacity:.6">هیچ بڕوانامەیەک زیاد نەکراوە.</p>';
+        return;
+      }
+      pContainer.innerHTML = items
+        .map((item) => {
+          const degree = item.querySelector('.edu-degree')?.value.trim() || 'بڕوانامە';
+          const school = item.querySelector('.edu-school')?.value.trim() || 'زانکۆ / پەیمانگا';
+          const date = item.querySelector('.edu-date')?.value.trim() || '';
+          return `
+            <div class="p-item">
+              <div class="p-item-head">
+                <div class="p-item-role">${escapeHtml(degree)}</div>
+                ${date ? `<div class="p-item-date">${escapeHtml(date)}</div>` : ''}
+              </div>
+              <div class="p-item-sub">${escapeHtml(school)}</div>
+            </div>
+          `;
+        })
+        .join('');
+    }
+
+    function addRow(degree = '', school = '', date = '') {
+      const row = document.createElement('div');
+      row.className = 'dyn-row';
+      row.innerHTML = `
+        <div class="dyn-grid">
+          <input type="text" class="edu-degree" placeholder="بڕوانامە (وەک: بەکالۆریۆس لە زانستی کۆمپیوتەر)" value="${escapeAttr(degree)}">
+          <input type="text" class="edu-school" placeholder="زانکۆ یان قوتابخانە" value="${escapeAttr(school)}">
+          <input type="text" class="edu-date" placeholder="ساڵ (وەک: ٢٠١٨ - ٢٠٢٢)" value="${escapeAttr(date)}">
+        </div>
+        <button type="button" class="del-row-btn" title="سڕینەوە">✕ سڕینەوە</button>
+      `;
+      row.querySelectorAll('input').forEach((el) => el.addEventListener('input', renderPreview));
+      row.querySelector('.del-row-btn').addEventListener('click', () => {
+        row.remove();
+        renderPreview();
+      });
+      list.appendChild(row);
+      renderPreview();
+    }
+
+    addBtn.addEventListener('click', () => addRow());
+    window.__addEduRow = addRow;
+  }
+
+  // ---------- Languages Dynamic List with levels ----------
+  function initLanguages() {
+    const list = $('langList');
+    const addBtn = $('addLangBtn');
+    const pContainer = $('pLangList');
+    if (!list || !addBtn || !pContainer) return;
+
+    function renderPreview() {
+      const items = Array.from(list.children);
+      if (!items.length) {
+        pContainer.innerHTML = '<p class="p-item-desc" style="opacity:.6">هیچ زمانێک دیاری نەکراوە.</p>';
+        return;
+      }
+      pContainer.innerHTML = items
+        .map((item) => {
+          const name = item.querySelector('.lang-name')?.value.trim() || 'زمان';
+          const level = item.querySelector('.lang-level')?.value || '100';
+          const levelLabel = level >= 90 ? 'دایک' : level >= 75 ? 'زۆر باش' : level >= 50 ? 'باش' : 'سەرەتایی';
+          return `
+            <div class="p-lang-item">
+              <div class="p-lang-head">
+                <span class="p-lang-name">${escapeHtml(name)}</span>
+                <span class="p-lang-val">${levelLabel}</span>
+              </div>
+              <div class="p-lang-bar">
+                <div class="p-lang-bar-fill" style="width:${level}%"></div>
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+    }
+
+    function addRow(name = '', level = '100') {
+      const row = document.createElement('div');
+      row.className = 'dyn-row';
+      row.innerHTML = `
+        <div class="dyn-grid" style="grid-template-columns: 2fr 1fr auto;">
+          <input type="text" class="lang-name" placeholder="ناوی زمان (وەک: کوردی)" value="${escapeAttr(name)}">
+          <select class="lang-level">
+            <option value="100" ${level == '100' ? 'selected' : ''}>زمانی دایک (١٠٠٪)</option>
+            <option value="85" ${level == '85' ? 'selected' : ''}>زۆر باش (٨٥٪)</option>
+            <option value="65" ${level == '65' ? 'selected' : ''}>باش (٦٥٪)</option>
+            <option value="40" ${level == '40' ? 'selected' : ''}>سەرەتایی (٤٠٪)</option>
+          </select>
+          <button type="button" class="del-row-btn" style="margin:0;">✕</button>
+        </div>
+      `;
+      row.querySelectorAll('input, select').forEach((el) => el.addEventListener('input', renderPreview));
+      row.querySelector('.del-row-btn').addEventListener('click', () => {
+        row.remove();
+        renderPreview();
+      });
+      list.appendChild(row);
+      renderPreview();
+    }
+
+    addBtn.addEventListener('click', () => addRow());
+    window.__addLangRow = addRow;
+  }
+
+  // ---------- Chip Inputs (Skills, Certs, References) ----------
+  function initChipInputs() {
+    const setup = (boxId, inputId, previewId, isTag = true) => {
+      const box = $(boxId);
+      const input = $(inputId);
+      const preview = $(previewId);
+      if (!box || !input || !preview) return;
+
+      const getChips = () =>
+        Array.from(box.querySelectorAll('.chip')).map((c) => c.dataset.val);
+
+      const renderPreview = () => {
+        const chips = getChips();
+        if (!chips.length) {
+          preview.innerHTML = `<span style="opacity:.5;font-size:12px">دیاری نەکراوە</span>`;
+          return;
+        }
+        if (isTag) {
+          preview.innerHTML = chips
+            .map((c) => `<span class="p-tag">${escapeHtml(c)}</span>`)
+            .join('');
+        } else {
+          preview.innerHTML = `<ul class="p-list">${chips
+            .map((c) => `<li>${escapeHtml(c)}</li>`)
+            .join('')}</ul>`;
+        }
+      };
+
+      const addChip = (text) => {
+        const val = (text || '').trim();
+        if (!val) return;
+        if (getChips().includes(val)) return;
+
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.dataset.val = val;
+        chip.innerHTML = `${escapeHtml(val)}<button type="button" aria-label="لابردن">✕</button>`;
+        chip.querySelector('button').addEventListener('click', () => {
+          chip.remove();
+          renderPreview();
+        });
+        box.insertBefore(chip, input);
+        renderPreview();
+      };
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          addChip(input.value);
+          input.value = '';
+        } else if (e.key === 'Backspace' && !input.value) {
+          const last = box.querySelector('.chip:last-of-type');
+          if (last) {
+            last.remove();
+            renderPreview();
+          }
+        }
+      });
+
+      return { addChip, clear: () => box.querySelectorAll('.chip').forEach((c) => c.remove()) };
+    };
+
+    window.__skillsApi = setup('skillsBox', 'skillsInput', 'pSkillsList', true);
+    window.__certsApi = setup('certsBox', 'certsInput', 'pCertsList', false);
+    window.__refsApi = setup('refsBox', 'refsInput', 'pRefsList', false);
+  }
+
+  // ---------- Profile Photo Editor & Upload ----------
+  function initPhotoEditor() {
+    const fileInput = $('photoInput');
+    const previewImg = $('pPhoto');
+    const removeBtn = $('removePhotoBtn');
+    const shapeSelect = $('photoShape');
+    const borderSelect = $('photoBorder');
+    const zoomInput = $('photoZoom');
+    const wrap = $('pPhotoWrap');
+
+    if (!previewImg || !wrap) return;
+
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+          alert('تکایە تەنها وێنە هەڵبژێرە');
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          previewImg.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => {
+        previewImg.src = DEFAULT_PHOTO_SRC;
+        if (fileInput) fileInput.value = '';
+      });
+    }
+
+    if (shapeSelect) {
+      shapeSelect.addEventListener('change', () => {
+        wrap.className = wrap.className
+          .replace(/shape-\w+/g, '')
+          .concat(` shape-${shapeSelect.value}`)
+          .trim();
+      });
+    }
+
+    if (borderSelect) {
+      borderSelect.addEventListener('change', () => {
+        wrap.className = wrap.className
+          .replace(/border-\w+/g, '')
+          .concat(` border-${borderSelect.value}`)
+          .trim();
+      });
+    }
+
+    if (zoomInput) {
+      zoomInput.addEventListener('input', () => {
+        const z = zoomInput.value || 100;
+        previewImg.style.transform = `scale(${z / 100})`;
+      });
+    }
+  }
+
+  // ---------- Template Picker & Gallery Synchronization ----------
   function initTemplatePicker() {
     const paper = $('paper');
     const picker = $('templatePicker');
-    if (!paper || !picker) return;
+    if (!paper) return;
 
-    const shapeButtons = picker.querySelectorAll('.shape-btn');
-    const colorRows = picker.querySelectorAll('.color-row');
-    const tplButtons = picker.querySelectorAll('.tpl-btn');
+    const shapeButtons = picker ? picker.querySelectorAll('.shape-btn') : [];
+    const colorRows = picker ? picker.querySelectorAll('.color-row') : [];
+    const tplButtons = picker ? picker.querySelectorAll('.tpl-btn') : [];
     const STORAGE_KEY = 'cvTemplateChoice';
 
     function shapeOf(tpl) {
-      if (tpl.startsWith('sidebar')) return 'sidebar';
-      if (tpl.startsWith('geometric')) return 'geometric';
+      if (!tpl) return 'classic';
+      if (tpl.startsWith('sidebar') || tpl.startsWith('dark-sidebar')) return 'sidebar';
+      if (tpl.startsWith('geometric') || tpl.startsWith('geo-')) return 'geometric';
       if (tpl.startsWith('overlap')) return 'overlap';
-      if (tpl.startsWith('minimal')) return 'minimal';
+      if (tpl.startsWith('minimal') || tpl.startsWith('ats-')) return 'minimal';
       return 'classic';
     }
 
     function showShape(shape) {
       shapeButtons.forEach(b => b.classList.toggle('active', b.dataset.shape === shape));
-      colorRows.forEach(row => { row.hidden = row.dataset.shapeGroup !== shape; });
+      colorRows.forEach(r => r.classList.toggle('active', r.dataset.shapeGroup === shape));
     }
 
     function applyTemplate(tpl) {
+      if (!tpl) tpl = 'gold';
       paper.dataset.tpl = tpl;
       tplButtons.forEach(b => b.classList.toggle('active', b.dataset.tpl === tpl));
       showShape(shapeOf(tpl));
+
+      const badgeName = $('activeTplName');
+      if (badgeName) {
+        let found = null;
+        if (window.CV_TEMPLATES) found = window.CV_TEMPLATES.find(t => t.id === tpl);
+        badgeName.textContent = found ? found.name : tpl;
+      }
+
       try { localStorage.setItem(STORAGE_KEY, tpl); } catch (e) {}
     }
 
@@ -547,7 +383,6 @@
       btn.addEventListener('click', () => {
         const shape = btn.dataset.shape;
         showShape(shape);
-        // jump straight to the first color option of the newly chosen shape
         const firstBtn = picker.querySelector(`.color-row[data-shape-group="${shape}"] .tpl-btn`);
         if (firstBtn) applyTemplate(firstBtn.dataset.tpl);
       });
@@ -557,98 +392,192 @@
       btn.addEventListener('click', () => applyTemplate(btn.dataset.tpl));
     });
 
-    let saved = null;
-    try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlTpl = urlParams.get('tpl');
+    let saved = urlTpl || null;
+    if (!saved) {
+      try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+    }
+
     if (saved) applyTemplate(saved);
-    else showShape('classic');
+    else applyTemplate('gold');
   }
 
-  // ---------- Design gallery: open/close the full-screen modal ----------
+  // ---------- Auto-save Form State before navigating to Template Gallery ----------
+  function initFormPersistence() {
+    const FORM_CACHE_KEY = 'kurdtech_cv_form_cache';
+    const fields = ['fName', 'fTitle', 'fEmail', 'fPhone', 'fAddress', 'fSummary', 'fObjective'];
+
+    function saveFields() {
+      const data = {};
+      fields.forEach(id => {
+        const el = $(id);
+        if (el) data[id] = el.value;
+      });
+      try { localStorage.setItem(FORM_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+    }
+
+    function restoreFields() {
+      try {
+        const raw = localStorage.getItem(FORM_CACHE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        fields.forEach(id => {
+          const el = $(id);
+          if (el && data[id] !== undefined) {
+            el.value = data[id];
+            el.dispatchEvent(new Event('input'));
+          }
+        });
+      } catch (e) {}
+    }
+
+    fields.forEach(id => {
+      const el = $(id);
+      if (el) el.addEventListener('input', saveFields);
+    });
+
+    const openBtn = $('openGalleryBtn');
+    if (openBtn) {
+      openBtn.addEventListener('click', saveFields);
+    }
+
+    restoreFields();
+  }
+
+  // ---------- Modal Gallery Support ----------
   function initGallery() {
     const openBtn = $('openGalleryBtn');
     const overlay = $('galleryOverlay');
-    const closeBtn = $('galleryCloseBtn');
-    const doneBtn = $('galleryDoneBtn');
-    if (!openBtn || !overlay) return;
+    const closeBtn = $('closeGalleryBtn');
+    const sheet = overlay ? overlay.querySelector('.gallery-sheet') : null;
+    const galleryItems = overlay ? overlay.querySelectorAll('.gallery-item') : [];
+    const paper = $('paper');
+    const STORAGE_KEY = 'cvTemplateChoice';
 
-    function open() { overlay.classList.add('open'); }
-    function close() { overlay.classList.remove('open'); }
+    if (!overlay) return;
 
-    openBtn.addEventListener('click', open);
-    closeBtn.addEventListener('click', close);
-    doneBtn.addEventListener('click', close);
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
-  }
+    function open() {
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      const current = paper.dataset.tpl || 'gold';
+      galleryItems.forEach(card => card.classList.toggle('active', card.dataset.tpl === current));
+    }
 
-  // ---------- Wire up "add" buttons ----------
-  document.querySelectorAll('[data-add]').forEach(btn => {
-    const kind = btn.getAttribute('data-add');
-    btn.addEventListener('click', () => {
-      if (kind === 'achievements') addAchievement();
-      else if (kind === 'links') addLinkItem();
-      else addRepeatItem(kind);
+    function close() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) close();
     });
-  });
 
-  // ---------- Print ----------
-  $('printBtn').addEventListener('click', () => window.print());
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.classList.contains('open')) close();
+    });
 
-  // ---------- Download as image (PNG) ----------
-  const imageBtn = $('imageBtn');
-  if (imageBtn) {
-    imageBtn.addEventListener('click', () => {
-      if (typeof html2canvas === 'undefined') {
-        alert('ئامرازی وێنەگرتن بارنەبووە، تکایە پەیوەندیت بە ئینتەرنێت بپشکنە و دووبارە هەوڵ بدەرەوە.');
-        return;
-      }
-      const paper = $('paper');
-      const originalLabel = imageBtn.innerHTML;
-      imageBtn.disabled = true;
-      imageBtn.innerHTML = '...';
-
-      html2canvas(paper, {
-        scale: 3,
-        useCORS: true,
-        backgroundColor: '#ffffff'
-      }).then((canvas) => {
-        const link = document.createElement('a');
-        const name = ($('fName').value || 'CV').trim().replace(/\s+/g, '-');
-        link.download = name + '.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      }).catch(() => {
-        alert('نەتوانرا وێنەکە دروست بکرێت، تکایە دووبارە هەوڵ بدەرەوە.');
-      }).finally(() => {
-        imageBtn.disabled = false;
-        imageBtn.innerHTML = originalLabel;
+    galleryItems.forEach(card => {
+      card.addEventListener('click', () => {
+        const tpl = card.dataset.tpl;
+        if (paper) paper.dataset.tpl = tpl;
+        $$('.tpl-btn').forEach(b => b.classList.toggle('active', b.dataset.tpl === tpl));
+        try { localStorage.setItem(STORAGE_KEY, tpl); } catch (e) {}
+        close();
       });
     });
   }
 
-  // ---------- Init ----------
-  bindSimple();
-  initSectionToggles();
+  // ---------- PDF Export Engine ----------
+  function initPdfExport() {
+    const btn = $('downloadPdfBtn');
+    const paper = $('paper');
+    if (!btn || !paper) return;
+
+    btn.addEventListener('click', async () => {
+      if (typeof html2pdf === 'undefined') {
+        window.print();
+        return;
+      }
+
+      btn.disabled = true;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<span>خەریکی دروستکردنی PDF...</span>';
+
+      const opt = {
+        margin: [0, 0, 0, 0],
+        filename: `${($('fName')?.value || 'CV').trim()}_KurdTech.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      try {
+        await html2pdf().set(opt).from(paper).save();
+      } catch (err) {
+        console.error('PDF export failed, falling back to print:', err);
+        window.print();
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    });
+  }
+
+  // ---------- Print Button ----------
+  function initPrint() {
+    const btn = $('printBtn');
+    if (btn) btn.addEventListener('click', () => window.print());
+  }
+
+  // ---------- Utility Functions ----------
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function escapeAttr(str) {
+    return escapeHtml(str).replace(/"/g, '&quot;');
+  }
+
+  // ---------- Bootstrap System ----------
+  initMirroring();
+  initExperience();
+  initEducation();
+  initLanguages();
   initChipInputs();
   initPhotoEditor();
   initTemplatePicker();
+  initFormPersistence();
   initGallery();
+  initPdfExport();
+  initPrint();
 
-  // seed with one example experience + one example education so the
-  // preview looks complete from the start
-  addRepeatItem('experience');
-  const firstExp = $('experienceList').querySelector('.repeat-item');
-  firstExp.querySelector('.e-role').value = 'گەشەپێدەری وێب';
-  firstExp.querySelector('.e-company').value = 'کۆمپانیای TechKurd';
-  firstExp.querySelector('.e-dates').value = '٢٠٢٣ - ئێستا';
-  firstExp.querySelector('.e-desc').value = 'دروستکردن و چاککردنی ماڵپەڕ بە بەکارهێنانی React و Node.js، هاوکاری لەگەڵ تیمی دیزاین بۆ باشترکردنی ئەزموونی بەکارهێنەر.';
-  renderKind('experience');
-
-  addRepeatItem('education');
-  const firstEdu = $('educationList').querySelector('.repeat-item');
-  firstEdu.querySelector('.d-degree').value = 'بەکالۆریۆس زانستی کۆمپیوتەر';
-  firstEdu.querySelector('.d-school').value = 'زانکۆی سەلاحەددین';
-  firstEdu.querySelector('.d-dates').value = '٢٠١٩ - ٢٠٢٣';
-  renderKind('education');
-
-  updateOptionalSections();
+  // Initial demo data
+  if (window.__addExpRow) {
+    window.__addExpRow(
+      'Senior Frontend Developer',
+      'Kurd Technology Co.',
+      '٢٠٢٢ - ئێستا',
+      'سەرپەرشتیکردنی تیمی گەشەپێدەران و دیزاینکردنی وێبسایت و ئەپڵیکەیشنە مۆدێرنەکان.'
+    );
+  }
+  if (window.__addEduRow) {
+    window.__addEduRow('بەکالۆریۆس لە زانستی کۆمپیوتەر', 'زانکۆی سەلاحەدین', '٢٠١٧ - ٢٠٢١');
+  }
+  if (window.__addLangRow) {
+    window.__addLangRow('کوردی', '100');
+    window.__addLangRow('ئینگلیزی', '85');
+    window.__addLangRow('عەرەبی', '65');
+  }
+  if (window.__skillsApi) {
+    ['HTML5', 'CSS3 & Tailwind', 'JavaScript & TypeScript', 'React', 'Git & GitHub'].forEach(s =>
+      window.__skillsApi.addChip(s)
+    );
+  }
 })();
