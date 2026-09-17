@@ -50,15 +50,15 @@
 <body class="relative min-h-screen">
   <div class="fixed inset-0 linear-glow pointer-events-none z-0"></div>
 
-  <!-- سەرەوەی پەیج: دوگمەکانی گەڕانەوە -->
+  <!-- سەرەوەی پەیج: دوگمەکانی گەڕانەوە بۆ CV بە بەستەری ڕاستەوخۆ -->
   <header class="glass-nav sticky top-0 z-40 px-4 sm:px-8 py-3.5 flex items-center justify-between">
     <div class="flex items-center gap-3">
-      <button type="button" onclick="goBackToCV()" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white transition-all cursor-pointer">
+      <a href="./cv-builder.html" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white transition-all cursor-pointer">
         <svg class="w-5 h-5 transform rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="5" y1="12" x2="19" y2="12"></line>
           <polyline points="12 5 19 12 12 19"></polyline>
         </svg>
-      </button>
+      </a>
       <div>
         <h1 class="kufi text-sm sm:text-base font-bold text-white flex items-center gap-2">
           <span>گالەری دیزاینەکانی CV</span>
@@ -69,10 +69,10 @@
     </div>
 
     <div class="flex items-center gap-2 sm:gap-3">
-      <button type="button" onclick="goBackToCV()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-indigo-500/20 flex items-center gap-2 transition-all cursor-pointer">
+      <a href="./cv-builder.html" class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-indigo-500/20 flex items-center gap-2 transition-all cursor-pointer">
         <span>گەڕانەوە بۆ CV</span>
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-      </button>
+      </a>
     </div>
   </header>
 
@@ -152,16 +152,12 @@
   </main>
 
   <script>
-    // فەنکشنی گەڕانەوە بۆ CV بە شێوازی سەلامەت و مسۆگەر
+    // فەنکشنی گەڕانەوەی ڕاستەوخۆ بۆ ناو سیڤییەکەت
     function goBackToCV() {
-      if (document.referrer && (document.referrer.includes('cv-builder') || document.referrer.includes('builder'))) {
-        window.history.back();
-      } else {
-        window.location.href = 'cv-builder.html';
-      }
+      window.location.assign('./cv-builder.html');
     }
 
-    // هەموو ٧٥ دیزاینەکە
+    // هەموو ٧٥ دیزاینەکە بە هەموو بەشەکانییەوە
     const CV_DATA = [
       { id: 'kurd-flag', name: 'ئاڵای کوردستان', category: 'kurd', categoryName: 'کوردستانی و شاخ', accent: '#FDBA12', bgType: 'kurd-flag', badge: 'تایبەت', desc: 'هێدەری سێ ڕەنگی پیرۆزی ئاڵای کوردستان لەگەڵ ڕۆژی زێڕین' },
       { id: 'kurd-mountain', name: 'شاخەکانی کوردستان', category: 'kurd', categoryName: 'کوردستانی و شاخ', accent: '#0C7A3D', bgType: 'nature-green', desc: 'سروشتی شاخاوی سەوزی بەهاری کوردستان بە چوارچێوەی زێڕین' },
@@ -274,7 +270,6 @@
             </linearGradient>
           </defs>
           <rect x="0" y="0" width="220" height="60" fill="url(#natGrad_${tpl.id})"/>
-          <path d="M0,60 L50,30 L100,60 L160,20 L220,60 Z" fill="rgba(255,255,255,0.15)"/>
           <circle cx="180" cy="30" r="14" fill="#FFFFFF" stroke="${accent}" stroke-width="2.5"/>
         `;
       } else if (isSidebar) {
@@ -396,8 +391,8 @@
       document.body.appendChild(toast);
 
       setTimeout(() => {
-        goBackToCV();
-      }, 500);
+        window.location.assign('./cv-builder.html');
+      }, 400);
     }
 
     function renderGrid() {
