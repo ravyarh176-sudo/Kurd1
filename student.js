@@ -76,6 +76,31 @@ let editingLessonId = null;
 let readerFontSize = 'md'; // sm, md, lg, xl
 let readerTheme = 'midnight';
 
+// --- ڕێکخستنی مافی بەکارهێنەر (Owner vs Student) ---
+// تەنها ئادمینی (owner) پرۆژەکە دەتوانێت وانە/بابەت زیاد بکات، دەستکاری بکات یان بسڕێتەوە.
+// بەکارهێنەرانی ئاسایی تەنها دەتوانن ڕونکردنەوە بخوێننەوە و تاقیکردنەوە بکەن.
+let isOwner = false;
+
+function applyRolePermissions() {
+  document.body.classList.toggle('is-owner', isOwner);
+  document.body.classList.toggle('is-student', !isOwner);
+
+  const adminOnlyIds = ['addSubjectBtn', 'addLessonBtn', 'deleteSubjectBtn', 'deleteSingleLessonBtn'];
+  adminOnlyIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden', !isOwner);
+  });
+
+  // نوێکردنەوەی لیستەکان تا دوگمەکانی دەستکاری/سڕینەوەی ناو ڕیزەکانیش نوێبنەوە
+  renderCurrentPage();
+}
+
+function guardOwnerAction(msg) {
+  if (isOwner) return true;
+  showToast(msg || 'تەنها ئادمینی پڕۆژە دەتوانێت ئەم کارە بکات.');
+  return false;
+}
+
 // هەڵگرتن و خوێندنەوەی داتا
 function loadDB() {
   try {
@@ -305,7 +330,7 @@ function renderSubjects() {
       <div class="subject-item-card" onclick="openSubject('${s.id}')">
         <div class="subject-top-row">
           <div class="subject-icon-box">${s.icon}</div>
-          <button class="danger-btn-sm" onclick="event.stopPropagation(); confirmDelete('subject', '${s.id}', '${s.name}')">🗑️</button>
+          ${isOwner ? `<button class="danger-btn-sm" onclick="event.stopPropagation(); confirmDelete('subject', '${s.id}', '${s.name}')">🗑️</button>` : ''}
         </div>
         <div>
           <b>${s.name}</b>
@@ -356,10 +381,10 @@ function renderLessons() {
               <small class="muted-text">کلیک بکە بۆ خوێندنەوەی تەواوی وانەکە</small>
             </div>
           </div>
-          <div class="lesson-card-actions">
+          ${isOwner ? `<div class="lesson-card-actions">
             <button class="secondary-btn-sm" onclick="openLessonModal('${l.id}')">✏️</button>
             <button class="danger-btn-sm" onclick="confirmDelete('lesson', '${l.id}', '${l.title}')">🗑️</button>
-          </div>
+          </div>` : ''}
         </div>
         <div class="lesson-tags">
           <span class="tag-item">📖 خوێندنەوە</span>
@@ -690,6 +715,7 @@ function openFullScreenReader() {
 
 // مۆداڵی وانە (Add/Edit Lesson)
 function openLessonModal(lessonId = null) {
+  if (!guardOwnerAction('تەنها ئادمینی پڕۆژە دەتوانێت پەڕە زیاد بکات یان دەستکاری بکات.')) return;
   editingLessonId = lessonId;
   const modal = document.getElementById('lessonModal');
   const title = document.getElementById('formLessonTitle');
@@ -718,6 +744,7 @@ function openLessonModal(lessonId = null) {
 }
 
 function saveLesson() {
+  if (!guardOwnerAction('تەنها ئادمینی پڕۆژە دەتوانێت پەڕە پاشەکەوت بکات.')) return;
   const title = document.getElementById('formLessonTitle').value.trim();
   const explain = document.getElementById('formLessonExplain').value.trim();
   const mcq = document.getElementById('formLessonMcq').value.trim();
@@ -754,6 +781,7 @@ function saveLesson() {
 
 // مۆداڵی دروستکردنی بابەت
 function saveSubject() {
+  if (!guardOwnerAction('تەنها ئادمینی پڕۆژە دەتوانێت بابەتی نوێ دروست بکات.')) return;
   const name = document.getElementById('formSubjectName').value.trim();
   const icon = document.getElementById('formSubjectIcon').value.trim() || '📗';
   if (!name) { showToast('تکایە ناوی بابەتەکە بنووسە.'); return; }
@@ -773,6 +801,7 @@ function saveSubject() {
 // مۆداڵی سڕینەوە
 let deletePending = null;
 function confirmDelete(type, id, title) {
+  if (!guardOwnerAction('تەنها ئادمینی پڕۆژە دەتوانێت بسڕێتەوە.')) return;
   deletePending = { type, id, title };
   document.getElementById('deleteConfirmText').innerHTML = `دڵنیایت لە سڕینەوەی <b>"${title}"</b>؟`;
   document.getElementById('deleteConfirmModal').classList.remove('hidden');
@@ -889,7 +918,18 @@ function runAggregate(type) {
 
 // دەستپێکردنی گوێگرەکان (Event Listeners) لە کاتی بارکردنی لاپەڕەدا
 document.addEventListener('DOMContentLoaded', () => {
+  // ڕۆڵی بەکارهێنەر لە guard.js دێت (window.kurdtechProfile.role === 'owner').
+  // ئەگەر guard.js پێشتر تەواو بووبێت، ڕاستەوخۆ بیخوێنەوە، ئەگەر نا چاوەڕوانی ڕووداوەکەی بکە.
+  if (window.kurdtechProfile) {
+    isOwner = window.kurdtechProfile.role === 'owner';
+  }
+  window.addEventListener('kurdtech:ready', () => {
+    isOwner = !!(window.kurdtechProfile && window.kurdtechProfile.role === 'owner');
+    applyRolePermissions();
+  });
+
   renderCurrentPage();
+  applyRolePermissions();
   fetchFromSupabase();
 
   // هەڵسوڕێنەرەکانی دوگمەکان
@@ -910,7 +950,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // گەڕان لە ناو بابەتەکان
   document.getElementById('subjectSearchInput')?.addEventListener('input', renderSubjects);
-  document.getElementById('addSubjectBtn')?.addEventListener('click', () => document.getElementById('subjectModal').classList.remove('hidden'));
+  document.getElementById('addSubjectBtn')?.addEventListener('click', () => {
+    if (!guardOwnerAction('تەنها ئادمینی پڕۆژە دەتوانێت بابەتی نوێ دروست بکات.')) return;
+    document.getElementById('subjectModal').classList.remove('hidden');
+  });
   document.getElementById('closeSubjectModalBtn')?.addEventListener('click', () => document.getElementById('subjectModal').classList.add('hidden'));
   document.getElementById('saveSubjectBtn')?.addEventListener('click', saveSubject);
 
