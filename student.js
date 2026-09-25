@@ -13,6 +13,18 @@ const STORE_KEY = 'student_system_kurdish_v1';
 const SUPABASE_URL = window.SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "";
 
+// یەک client-ی Supabase بۆ هەموو لاپەڕەی سیستەمی قوتابی (هەمان client-ی
+// window.supabase-js کە لە index.html/auth.js بەکاردێت). بەم شێوەیە
+// دەتوانین realtime بەکاربهێنین بۆ ئەوەی گۆڕانکارییەکان ڕاستەوخۆ بگاتە
+// هەموو کەسانی تر، بەبێ پێویست بوون بە نوێکردنەوەی لاپەڕە.
+let sdb = null;
+if (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase?.createClient) {
+  sdb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+// نیشانەیەک بۆ ئەوەی نەکەوینە ناو چەمکی "خۆم گۆڕانکاریم کرد، دواتر
+// realtime هەمان گۆڕانکاری بۆم دەگەڕێنێتەوە و دووبارە render دەکەم"
+let lastLocalSaveAt = 0;
+
 // داتاکانی بنەڕەتی کاتێک یەکەمجار ئەپەکە دەکرێتەوە
 const defaultDB = {
   classes: [
@@ -126,37 +138,31 @@ function saveDB() {
   }
 }
 
-// پەیوەندی بە داتابەیسی سەرهێڵی Supabase
+// پەیوەندی بە داتابەیسی سەرهێڵی Supabase (هەمان ڕیزی 'main' بۆ هەمووان)
 async function syncWithSupabase() {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.length < 10) return;
+  if (!sdb) return;
+  lastLocalSaveAt = Date.now();
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/student_system`, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates'
-      },
-      body: JSON.stringify({ id: 'main', data: db, updated_at: new Date().toISOString() })
-    });
+    const { error } = await sdb
+      .from('student_system')
+      .upsert({ id: 'main', data: db, updated_at: new Date().toISOString() });
+    if (error) console.warn('Supabase sync error', error.message);
   } catch (err) {
     console.warn('Supabase sync error', err);
   }
 }
 
 async function fetchFromSupabase() {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.length < 10) return;
+  if (!sdb) return;
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/student_system?id=eq.main&select=data`, {
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-      }
-    });
-    const result = await res.json();
-    if (result && result[0]?.data) {
-      db = result[0].data;
+    const { data: result, error } = await sdb
+      .from('student_system')
+      .select('data')
+      .eq('id', 'main')
+      .maybeSingle();
+    if (error) { console.warn('Supabase fetch error', error.message); return; }
+    if (result?.data) {
+      db = result.data;
       localStorage.setItem(STORE_KEY, JSON.stringify(db));
       renderCurrentPage();
       showToast('داتا لە داتابەیسی Supabase وەرگیرایەوە ☁️');
@@ -164,6 +170,33 @@ async function fetchFromSupabase() {
   } catch (e) {
     console.warn('Supabase fetch error', e);
   }
+}
+
+// گوێگرتن بە گۆڕانکارییە ڕاستەوخۆکان (Realtime): کاتێک هەر کەسێکی تر
+// (ئادمین یان قوتابییەکی تر) وانە/تاقیکردنەوەیەک زیاد بکات یان بیگۆڕێت،
+// ئەم فەنکشنە خۆکارانە داتاکە نوێ دەکاتەوە لای هەموو کەسانی تر، بەبێ
+// پێویست بوون بە نوێکردنەوەی لاپەڕە.
+function subscribeRealtime() {
+  if (!sdb) return;
+  sdb
+    .channel('student_system_live')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'student_system', filter: 'id=eq.main' },
+      (payload) => {
+        // ئەگەر گۆڕانکارییەکە هەر ئێمە خۆمان بووین کە چەند چرکەیەک لەمەوبەر
+        // هەڵمانگرت، پەیامەکە پشتگوێ بخە تا لاپەڕە بێ‌هۆیانە دووبارە render نەکرێت
+        if (Date.now() - lastLocalSaveAt < 4000) return;
+        const incoming = payload.new?.data;
+        if (incoming) {
+          db = incoming;
+          localStorage.setItem(STORE_KEY, JSON.stringify(db));
+          renderCurrentPage();
+          showToast('داتا نوێکرایەوە ☁️');
+        }
+      }
+    )
+    .subscribe();
 }
 
 // دۆزینەوەی دەقی ڕاست و پاککردنەوە
@@ -931,6 +964,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCurrentPage();
   applyRolePermissions();
   fetchFromSupabase();
+  subscribeRealtime();
 
   // هەڵسوڕێنەرەکانی دوگمەکان
   document.getElementById('brandBtn')?.addEventListener('click', () => navigate('home'));
