@@ -1080,7 +1080,7 @@ body {
 }
 
 .checkbox-pages-list {
-  max-height: 160px;
+  max-height: 220px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -1088,17 +1088,67 @@ body {
   padding: 4px;
 }
 
+.checkbox-pages-list::-webkit-scrollbar { width: 5px; }
+.checkbox-pages-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+
 .page-check-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 12px 14px;
   border-radius: 14px;
   background: rgba(255,255,255,0.04);
   border: 1px solid var(--border-color);
   cursor: pointer;
-  font-size: 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .12s ease;
+  user-select: none;
 }
+
+.page-check-row:active { transform: scale(0.98); }
+
+.page-check-row:has(.agg-page-checkbox:checked) {
+  background: rgba(124, 92, 255, 0.14);
+  border-color: rgba(124, 92, 255, 0.55);
+  color: var(--text-main);
+}
+
+/* Hide native checkbox, build a custom themed one instead */
+.page-check-row input[type="checkbox"].agg-page-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  border-radius: 7px;
+  border: 1.5px solid rgba(255,255,255,0.28);
+  background: rgba(255,255,255,0.05);
+  position: relative;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+
+.page-check-row input[type="checkbox"].agg-page-checkbox:checked {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-color: transparent;
+}
+
+.page-check-row input[type="checkbox"].agg-page-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 5px;
+  height: 10px;
+  border: solid #fff;
+  border-width: 0 2.5px 2.5px 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.page-check-row span { flex: 1; }
 
 .delete-icon-circle {
   width: 56px;
