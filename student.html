@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#07111f">
+  <title>سیستەمی قوتابی</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="student.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- سەرپەڕەی سەرەکی (Header) -->
+    <header class="app-header">
+      <div class="header-brand" id="brandBtn">
+        <div class="brand-icon">🎓</div>
+        <div class="brand-text">
+          <strong>سیستەمی قوتابی</strong>
+          <small>پلاتفۆرمی فێربوون و تاقیکردنەوە</small>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="backBtn" class="icon-btn hidden" title="گەڕانەوە">❮</button>
+        <button id="headerAggExamBtn" class="icon-btn text-accent" title="تاقیکردنەوەی پەڕەکان">📝</button>
+        <button id="settingsBtn" class="icon-btn" title="ڕێکخستنەکان">⚙️</button>
+      </div>
+    </header>
+
+    <!-- پەڕەکان (Views) -->
+    <main id="mainContent">
+      <!-- لاپەڕەی ١: سەرەکی (Home) -->
+      <section id="viewHome" class="view-page active">
+        <!-- کارتی کارە خێراکان -->
+        <div class="section-block">
+          <div class="section-head">
+            <h2>✨ کارە سەرەکییەکان</h2>
+            <span class="badge-pill">خێرا و ئاسان</span>
+          </div>
+          <div class="actions-grid">
+            <button class="action-card primary-gradient" id="homeAggExamBtn">
+              <div class="action-card-content">
+                <div class="card-icon-box">📝</div>
+                <div>
+                  <b>تاقیکردنەوەی پەڕە هەڵبژێردراوەکان</b>
+                  <small>چەند پەڕەیەک دیاری بکە و تاقیکردنەوە بکە</small>
+                </div>
+              </div>
+              <span class="card-arrow">❮</span>
+            </button>
+            <button class="action-card dark-card" id="homeQuickLessonsBtn">
+              <div class="action-card-content">
+                <div class="card-icon-box cyan-glow">📚</div>
+                <div>
+                  <b>وانەکانی پۆلی ١٠</b>
+                  <small>ڕاستەوخۆ بڕۆ ناو بابەت و پەڕەکان</small>
+                </div>
+              </div>
+              <span class="card-arrow">❮</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- بەشی پۆلەکان -->
+        <div class="section-block">
+          <div class="section-head">
+            <h2>📑 پۆلی خۆت هەڵبژێرە</h2>
+            <span class="muted-text">١٠ • ١١ • ١٢</span>
+          </div>
+          <div class="classes-grid" id="classesGrid">
+            <!-- لێرە پۆلەکان بە جافاسکریپت دادەنرێن -->
+          </div>
+        </div>
+
+        <!-- کارتی کورتەی سیستەمی قوتابی -->
+        <div class="system-summary-card">
+          <div class="summary-top">
+            <span class="summary-badge">✨ پلاتفۆرمی فێربوونی زیرەک</span>
+            <small class="muted-text">ئامارە گشتییەکان</small>
+          </div>
+          <h2 class="summary-title">سیستەمی قوتابی</h2>
+          <p class="summary-desc">پەڕەکان بە شێوازێکی مۆدێرن بخوێنەوە و بە تاقیکردنەوەی خێرا خۆت بسەلمێنە.</p>
+          <div class="stats-grid">
+            <div class="stat-box">
+              <strong id="statTotalLessons">0</strong>
+              <span>پەڕە</span>
+            </div>
+            <div class="stat-box">
+              <strong id="statTotalQuestions" class="cyan-text">0</strong>
+              <span>پرسیار</span>
+            </div>
+            <div class="stat-box">
+              <strong class="green-text">3</strong>
+              <span>پۆل</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- لاپەڕەی ٢: بابەتەکان (Subjects) -->
+      <section id="viewSubjects" class="view-page">
+        <div class="breadcrumb">
+          <span id="subjectClassBreadcrumb">پۆلی ١٠</span> / بابەتەکان
+        </div>
+        <h1 class="page-title">کتێب و بابەتەکان</h1>
+        <div class="search-box">
+          <input type="text" id="subjectSearchInput" placeholder="گەڕان بۆ بابەت...">
+        </div>
+        <div class="subjects-grid" id="subjectsGrid"></div>
+        <button id="addSubjectBtn" class="outline-action-btn">➕ دروستکردنی بابەتی نوێ</button>
+      </section>
+
+      <!-- لاپەڕەی ٣: پەڕە و وانەکان (Lessons List) -->
+      <section id="viewLessons" class="view-page">
+        <div class="view-header-row">
+          <div>
+            <div class="breadcrumb" id="lessonSubjectBreadcrumb">کوردی / پەڕەکان</div>
+            <h1 class="page-title" id="lessonsPageTitle">وانەکانی بابەتەکە</h1>
+          </div>
+          <button id="deleteSubjectBtn" class="danger-btn-sm" title="سڕینەوەی ئەم بابەتە">🗑️ سڕینەوەی بابەت</button>
+        </div>
+        <div class="toolbar-row">
+          <button id="addLessonBtn" class="primary-btn-sm">➕ پەڕەی نوێ بنووسە</button>
+          <button id="lessonsAggBtn" class="secondary-btn-sm">📝 تاقیکردنەوەی پەڕەکان</button>
+        </div>
+        <div class="lessons-list" id="lessonsList"></div>
+      </section>
+
+      <!-- لاپەڕەی ٤: بینینی پەڕەی دیاریکراو (Single Lesson) -->
+      <section id="viewLesson" class="view-page">
+        <div class="view-header-row">
+          <div>
+            <div class="breadcrumb" id="singleLessonBreadcrumb">وانەکان</div>
+            <h1 class="page-title" id="singleLessonTitle">ناوی وانەکە</h1>
+          </div>
+          <button id="deleteSingleLessonBtn" class="danger-btn-sm" title="سڕینەوە">🗑️ سڕینەوەی پەڕە</button>
+        </div>
+
+        <!-- تابەکان -->
+        <div class="tabs-header">
+          <button class="tab-btn active" data-tab="explain">📖 ڕونکردنەوەی وانە زۆر بە جوانی</button>
+          <button class="tab-btn" data-tab="mcq">☑️ هەڵبژاردن (<span id="tabMcqCount">0</span>)</button>
+          <button class="tab-btn" data-tab="fill">✍️ بۆشایی (<span id="tabFillCount">0</span>)</button>
+        </div>
+
+        <!-- ناوەڕۆکی تابەکان -->
+        <div class="tab-content active" id="tabContentExplain">
+          <div class="fullscreen-prompt-banner">
+            <div class="prompt-text">
+              <b>ڕونکردنەوەی وانە زۆر بە جوانی</b>
+              <small>بۆ بینینی تەواوی شاشە و خوێندنەوەی بەرفراوان بیکە بە تەواوی شاشە</small>
+            </div>
+            <button id="openFullScreenBtn" class="primary-btn-sm">⛶ تەواوی شاشە</button>
+          </div>
+          <div class="explanation-box">
+            <div class="box-head">
+              <span class="box-badge">📖 ڕونکردنەوەی وانە زۆر بە جوانی</span>
+              <button id="openFullScreenBtn2" class="text-link">⛶ فول سکرین</button>
+            </div>
+            <div class="box-body" id="lessonExplainBody"></div>
+            <div class="box-footer">
+              <div>
+                <b>ئامادەی بۆ تاقیکردنەوە؟</b>
+                <small>خۆت لە هەڵبژاردن یان بۆشایی پڕکردنەوە بسەلمێنە</small>
+              </div>
+              <div class="flex-gap">
+                <button id="startLessonMcqBtn" class="primary-btn-sm">☑️ هەڵبژاردن</button>
+                <button id="startLessonFillBtn" class="secondary-btn-sm">✍️ بۆشایی</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tabContentMcq">
+          <div id="lessonMcqList" class="quiz-review-list"></div>
+          <button id="startLessonMcqBigBtn" class="primary-action-btn mt-3">دەستپێکردنی تاقیکردنەوەی هەڵبژاردن</button>
+        </div>
+
+        <div class="tab-content" id="tabContentFill">
+          <div id="lessonFillList" class="quiz-review-list"></div>
+          <button id="startLessonFillBigBtn" class="primary-action-btn mt-3">دەستپێکردنی تاقیکردنەوەی بۆشایی</button>
+        </div>
+      </section>
+
+      <!-- لاپەڕەی ٥: تاقیکردنەوە (Quiz Interactive) -->
+      <section id="viewQuiz" class="view-page">
+        <div class="quiz-header-bar">
+          <div class="flex-gap">
+            <span class="badge-pill" id="quizModeBadge">☑️ هەڵبژاردن</span>
+            <span class="streak-pill hidden" id="quizStreakBadge">🔥 <span id="quizStreakCount">0</span></span>
+          </div>
+          <div class="flex-gap">
+            <button id="quizSoundToggle" class="icon-btn-sm" title="دەنگ">🔊</button>
+            <span class="count-pill" id="quizProgressText">١ / ١٠</span>
+          </div>
+        </div>
+        <div class="quiz-progress-bar">
+          <div class="progress-fill" id="quizProgressBarFill" style="width: 10%;"></div>
+        </div>
+        <div class="question-chips" id="quizQuestionChips"></div>
+
+        <div class="active-question-card">
+          <div class="q-card-top">
+            <span class="q-badge" id="quizQuestionNum">#١</span>
+            <span class="q-page-tag" id="quizPageTag"></span>
+          </div>
+          <h3 class="q-text" id="quizQuestionText">دەقی پرسیار</h3>
+
+          <!-- هەڵبژاردنەکان -->
+          <div id="quizMcqOptions" class="mcq-options-container"></div>
+
+          <!-- پڕکردنەوەی بۆشایی -->
+          <div id="quizFillContainer" class="fill-container hidden">
+            <input type="text" id="quizFillInput" placeholder="وەڵامەکەت بنووسە...">
+            <button id="submitFillBtn" class="primary-action-btn mt-2">ناردنی وەڵام</button>
+            <div id="fillFeedbackBox" class="feedback-banner hidden"></div>
+          </div>
+        </div>
+
+        <div class="quiz-footer-nav">
+          <button id="cancelQuizBtn" class="secondary-btn-sm">کۆتاییهێنان</button>
+          <div class="flex-gap">
+            <button id="prevQuizQBtn" class="secondary-btn-sm">پرسیاری پێشوو</button>
+            <button id="nextQuizQBtn" class="primary-btn-sm">پرسیاری دواتر</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- لاپەڕەی ٦: ئەنجامی تاقیکردنەوە (Quiz Result) -->
+      <section id="viewResult" class="view-page">
+        <div class="result-hero-card">
+          <div class="score-circle">
+            <span id="resultPercentText">100%</span>
+          </div>
+          <h2 id="resultTitle">ئەنجامی تاقیکردنەوە</h2>
+          <p id="resultDetailText">ڕاست: 0 • هەڵە: 0 • کۆی گشتی: 0</p>
+          <div class="result-stats-row">
+            <div class="res-stat-box green-box">
+              <strong id="resultCorrectCount">0</strong>
+              <span>وەڵامی ڕاست</span>
+            </div>
+            <div class="res-stat-box red-box">
+              <strong id="resultWrongCount">0</strong>
+              <span>وەڵامی هەڵە</span>
+            </div>
+            <div class="res-stat-box">
+              <strong id="resultTotalCount">0</strong>
+              <span>کۆی پرسیار</span>
+            </div>
+          </div>
+          <div class="flex-center-gap mt-3">
+            <button id="retryQuizBtn" class="primary-btn-sm">دووبارەکردنەوە</button>
+            <button id="exitResultBtn" class="secondary-btn-sm">گەڕانەوە بۆ وانەکە</button>
+          </div>
+        </div>
+
+        <div class="section-block">
+          <h3 class="section-title">🔎 وردبینی پرسیار و وەڵامەکان</h3>
+          <div id="resultAnswersList" class="answers-review-container"></div>
+        </div>
+      </section>
+
+      <!-- لاپەڕەی ٧: ڕێکخستنەکان (Settings) -->
+      <section id="viewSettings" class="view-page">
+        <h1 class="page-title">ڕێکخستنەکان</h1>
+        <p class="muted-text">ئامار و دۆخی داتابەیسی سیستەمی فێربوون.</p>
+
+        <div class="card-box mt-3">
+          <div class="box-head">
+            <h3>📊 دۆخی سیستەم و ئامار</h3>
+            <span class="green-text font-bold">چالاک • خێرا</span>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-box">
+              <strong id="settingsLessonsCount">0</strong>
+              <span>پەڕە</span>
+            </div>
+            <div class="stat-box">
+              <strong id="settingsQuestionsCount" class="cyan-text">0</strong>
+              <span>پرسیار</span>
+            </div>
+            <div class="stat-box">
+              <strong id="settingsSubjectsCount" class="green-text">0</strong>
+              <span>وانەی چالاک</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- دۆخی داتابەیسی سەرهێڵ (Supabase) -->
+        <div class="card-box mt-3">
+          <div class="box-head">
+            <h3>☁️ سیستەمی داتابەیس (Supabase)</h3>
+            <span id="dbStatusBadge" class="badge-pill">ناوخۆیی (Offline)</span>
+          </div>
+          <div class="p-3">
+            <p class="muted-text font-12" id="dbStatusText">
+              داتاکان لەسەر ئامێرەکەت هەڵگیراون (Local). ئەگەر دەتەوێت ببێتە سەرهێڵ، دەتوانیت کلیلی SUPABASE_URL و SUPABASE_ANON_KEY لەناو فایلی student.js دابنێیت.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- مۆداڵی ١: فۆرمی دروستکردن یان دەستکاری پەڕە -->
+    <div id="lessonModal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3 id="lessonModalTitle">✨ دروستکردنی پەڕەی نوێ</h3>
+          <button class="modal-close-btn" id="closeLessonModalBtn">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>پەڕەکە بنووسە</label>
+            <input type="text" id="formLessonTitle" placeholder="پەڕەکە بنووسە (بۆ نموونە: پەڕەی 15 یان ناوی وانەکە)">
+          </div>
+          <div class="form-group">
+            <label>📖 ڕونکردنەوەی وانە زۆر بە جوانی</label>
+            <textarea id="formLessonExplain" rows="4" placeholder="ڕونکردنەوەی وانە زۆر بە جوانی لێرە بنووسە..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>☑️ تاقیکردنەوەی هەڵبژاردن</label>
+            <textarea id="formLessonMcq" rows="4" placeholder="پرسیار&#10;وەڵام 1&#10;وەڵام 2 <12>&#10;وەڵام 3&#10;وەڵام 4&#10;###&#10;پرسیاری دواتر..."></textarea>
+            <small class="muted-text">هەر پرسیار بە <b>###</b> جیابکەرەوە. وەڵامی ڕاست بە <b>&lt;12&gt;</b> دیاری بکە.</small>
+          </div>
+          <div class="form-group">
+            <label>✍️ تاقیکردنەوەی بۆشایی</label>
+            <textarea id="formLessonFill" rows="4" placeholder="سەلام کردن لە ئاینی ....... کارێکی چاکە&#10;ئیسڵامدا <13>&#10;###&#10;پرسیاری دواتر...&#10;وەڵام <13>"></textarea>
+            <small class="muted-text">هەر پرسیار بە <b>###</b> جیابکەرەوە. وەڵامی ڕاست بە <b>&lt;13&gt;</b> دیاری بکە.</small>
+          </div>
+          <div class="flex-gap mt-3">
+            <button id="saveLessonBtn" class="primary-action-btn flex-1">پاشەکەوتکردن</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- مۆداڵی ٢: دروستکردنی بابەتی نوێ -->
+    <div id="subjectModal" class="modal-overlay hidden">
+      <div class="modal-card max-w-sm">
+        <div class="modal-head">
+          <h3>➕ دروستکردنی بابەتی نوێ</h3>
+          <button class="modal-close-btn" id="closeSubjectModalBtn">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>ناوی بابەت</label>
+            <input type="text" id="formSubjectName" placeholder="ناوی بابەت بنووسە">
+          </div>
+          <div class="form-group">
+            <label>ئایکۆن یان ئیمۆجی</label>
+            <input type="text" id="formSubjectIcon" value="📗">
+          </div>
+          <button id="saveSubjectBtn" class="primary-action-btn mt-3">دروستکردن</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- مۆداڵی ٣: تاقیکردنەوەی پەڕە هەڵبژێردراوەکان (Aggregate Exam) -->
+    <div id="aggregateModal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3>📝 تاقیکردنەوەی پەڕە هەڵبژێردراوەکان</h3>
+          <button class="modal-close-btn" id="closeAggModalBtn">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>١. پۆل دیاری بکە</label>
+            <select id="aggClassSelect"></select>
+          </div>
+          <div class="form-group">
+            <label>٢. بابەت دیاری بکە</label>
+            <select id="aggSubjectSelect"></select>
+          </div>
+          <div class="form-group">
+            <div class="flex-between">
+              <label>٣. پەڕەکان هەڵبژێرە</label>
+              <span id="aggSelectedCountText" class="cyan-text font-bold">٠ پەڕە</span>
+            </div>
+            <div class="flex-gap mb-2">
+              <button id="aggSelectAllBtn" class="small-btn">هەمووی دیاری بکە</button>
+              <button id="aggDeselectAllBtn" class="small-btn">هەمووی لابدە</button>
+            </div>
+            <div id="aggPagesCheckboxList" class="checkbox-pages-list"></div>
+          </div>
+          <div class="form-group mt-3">
+            <label>٤. جۆری تاقیکردنەوە هەڵبژێرە</label>
+            <div class="grid-2-gap">
+              <button id="startAggMcqBtn" class="primary-btn-sm">☑️ تاقیکردنەوەی هەڵبژاردن</button>
+              <button id="startAggFillBtn" class="secondary-btn-sm">✍️ تاقیکردنەوەی بۆشایی</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- مۆداڵی ٤: دڵنیابوونەوەی سڕینەوە -->
+    <div id="deleteConfirmModal" class="modal-overlay hidden">
+      <div class="modal-card max-w-sm text-center">
+        <div class="delete-icon-circle">🗑️</div>
+        <h3>دڵنیایت لە سڕینەوە؟</h3>
+        <p class="muted-text font-12" id="deleteConfirmText">ئەم بڕگەیە بە یەکجاری دەسڕێتەوە.</p>
+        <div class="flex-gap mt-3">
+          <button id="confirmDeleteYesBtn" class="danger-action-btn flex-1">بەڵێ، بسڕەوە</button>
+          <button id="confirmDeleteNoBtn" class="secondary-btn-sm">پەشیمانبوونەوە</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- پەنجەرەی خوێندنەوەی تەواوی شاشە (Full Screen Reader) -->
+    <div id="fullScreenReader" class="fullscreen-reader hidden">
+      <div class="reader-top-bar">
+        <div class="reader-header-info">
+          <div class="reader-icon">📖</div>
+          <div>
+            <span id="readerClassSubjectText" class="cyan-text font-12 block">پۆل • بابەت</span>
+            <strong id="readerLessonTitle" class="block font-16">تایتڵی وانە</strong>
+          </div>
+        </div>
+        <div class="reader-controls">
+          <div class="btn-group">
+            <button id="readerFontDownBtn" title="بچووککردن">A-</button>
+            <button id="readerFontUpBtn" title="گەورەکردن">A+</button>
+          </div>
+          <div class="btn-group theme-group">
+            <button class="theme-btn active" data-theme="midnight">تاریک</button>
+            <button class="theme-btn" data-theme="obsidian">ڕەش</button>
+            <button class="theme-btn" data-theme="sepia">کتێب</button>
+          </div>
+          <button id="closeFullScreenBtn" class="danger-btn-sm">✕ داخستن</button>
+        </div>
+      </div>
+      <div class="reader-scroll-area">
+        <div class="reader-banner">
+          <h1 id="readerHeroTitle">تایتڵی وانە</h1>
+          <p class="cyan-text font-bold">📖 ڕونکردنەوەی وانە زۆر بە جوانی (فوول سکرین)</p>
+        </div>
+        <div class="reader-text-box" id="readerTextBox"></div>
+        <div class="reader-nav-row">
+          <button id="readerPrevBtn" class="secondary-btn-sm hidden">وانەی پێشوو</button>
+          <button id="readerNextBtn" class="secondary-btn-sm hidden">وانەی دواتر</button>
+        </div>
+        <div class="reader-bottom-launchpad">
+          <div>
+            <b>ئامادەی بۆ تاقیکردنەوەی ئەم وانەیە؟</b>
+            <small class="muted-text block">هەر ئێستا لە هەڵبژاردن یان بۆشایی خۆت تاقی بکەرەوە</small>
+          </div>
+          <div class="flex-gap">
+            <button id="readerStartMcqBtn" class="primary-btn-sm">☑️ هەڵبژاردن</button>
+            <button id="readerStartFillBtn" class="secondary-btn-sm">✍️ بۆشایی</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- پەیامی خێرا (Toast Alert) -->
+    <div id="toastAlert" class="toast-alert hidden"></div>
+  </div>
+
+  <script src="guard.js"></script>
+  <script src="student.js"></script>
+</body>
+</html>
