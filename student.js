@@ -127,39 +127,40 @@ function saveDB() {
 }
 
 // پەیوەندی بە داتابەیسی سەرهێڵی Supabase
+// تێبینی: بەکارهێنانی کڵاینتی window.kurdtechSupabase (لە guard.js دروستکراوە) کارە،
+// نەک fetch بە دەستی بە کلیلی anon، چونکە یاساکانی RLS پێویستیان بە دۆخی
+// "چوونەژوورەوە"(authenticated)ی ڕاستەقینەی بەکارهێنەرە، نەک تەنها کلیلی anon.
 async function syncWithSupabase() {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.length < 10) return;
+  const supabase = window.kurdtechSupabase;
+  if (!supabase) return;
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/student_system`, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates'
-      },
-      body: JSON.stringify({ id: 'main', data: db, updated_at: new Date().toISOString() })
-    });
+    const { error } = await supabase
+      .from('student_system')
+      .upsert({ id: 'main', data: db, updated_at: new Date().toISOString() });
+    if (error) {
+      console.warn('Supabase sync error', error);
+      showToast('کێشە هەبوو لە هەڵگرتنی داتا لە داتابەیس ☁️❌');
+    }
   } catch (err) {
     console.warn('Supabase sync error', err);
+    showToast('کێشە هەبوو لە هەڵگرتنی داتا لە داتابەیس ☁️❌');
   }
 }
 
 async function fetchFromSupabase() {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.length < 10) return;
+  const supabase = window.kurdtechSupabase;
+  if (!supabase) return;
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/student_system?id=eq.main&select=data`, {
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-      }
-    });
-    const result = await res.json();
-    if (result && result[0]?.data) {
-      db = result[0].data;
+    const { data: row, error } = await supabase
+      .from('student_system')
+      .select('data')
+      .eq('id', 'main')
+      .maybeSingle();
+    if (error) { console.warn('Supabase fetch error', error); return; }
+    if (row && row.data) {
+      db = row.data;
       localStorage.setItem(STORE_KEY, JSON.stringify(db));
       renderCurrentPage();
-      showToast('داتا لە داتابەیسی Supabase وەرگیرایەوە ☁️');
     }
   } catch (e) {
     console.warn('Supabase fetch error', e);
