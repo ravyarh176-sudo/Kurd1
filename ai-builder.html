@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>دروستکەری وێب | Kurd Technology</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@600;700;800&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="ai-builder.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="theme.js"></script>
+</head>
+<body>
+<div class="glow"></div>
+
+<header class="bar">
+  <a class="ib" href="services.html" aria-label="گەڕانەوە">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+  </a>
+  <div class="brand">
+    <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>
+    <b>دروستکەری وێب</b>
+  </div>
+  <span class="who" id="who"></span>
+  <button class="ib" id="themeBtn" type="button" aria-label="تیم">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+  </button>
+</header>
+
+<main>
+  <!-- شاشەی ١: دەستپێک -->
+  <section id="home">
+    <h1>وێب سایتەکەت بە ئاسانی دروست بکە</h1>
+    <p class="lead">وەسفێکی کورت بنووسە بۆ ئەوەی ژیریی دەستکرد وێب سایتەکەت بۆ دروست بکات.</p>
+
+    <div class="box">
+      <textarea id="prompt" maxlength="800" placeholder="وەسفی وێب سایتەکەت بکە..."></textarea>
+      <button class="go" id="sendBtn" type="button">
+        ناردن
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </div>
+    <div class="err" id="homeErr" hidden></div>
+
+    <h2>ئەو پڕۆژانەی پێشتر دروست کردووە</h2>
+    <div class="grid">
+      <article class="card">
+        <div class="th th-shop"><i></i><i></i><i></i></div>
+        <h3>پڕۆژەی فرۆشگا</h3>
+        <button class="pill" type="button" data-fill="فرۆشگای جل بۆ ژنان دروست بکە، ٥ بەرهەم هەبێت، دیزاینەکە تاریک و مۆدێرن بێت.">بینین</button>
+      </article>
+      <article class="card">
+        <div class="th th-folio"><i></i><i></i><i></i></div>
+        <h3>پۆرتفۆلیۆی کەسی</h3>
+        <button class="pill" type="button" data-fill="پۆرتفۆلیۆی کەسی بۆ دیزاینەرێک، تاریک و مۆدێرن.">بینین</button>
+      </article>
+      <article class="card">
+        <div class="th th-trip"><i></i><i></i><i></i></div>
+        <h3>وێب سایتی گەشتیاری</h3>
+        <button class="pill" type="button" data-fill="وێب سایتی گەشتیاری بۆ کۆمپانیایەکی گەشت، ڕەنگی سەوز و ڕووناک.">بینین</button>
+      </article>
+    </div>
+  </section>
+
+  <!-- شاشەی ٢: چات و بینین -->
+  <section id="chat" hidden>
+    <div class="tabs" role="tablist">
+      <button class="tab on" id="tabChat" type="button" role="tab">چاتی من و ئەی ئای</button>
+      <button class="tab" id="tabView" type="button" role="tab">بینینی وێب سایت</button>
+    </div>
+
+    <div id="paneChat">
+      <div class="botcard">
+        <div class="avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="9" width="14" height="11" rx="3"/><circle cx="9.5" cy="14.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="14.5" cy="14.5" r="1.2" fill="currentColor" stroke="none"/><path d="M12 9V5"/><circle cx="12" cy="3.5" r="1.5"/></svg><span class="dot"></span></div>
+        <div><b>ئەی ئای ستۆر بیڵدەر (AI Store Builder)</b><small>ئۆنلاین</small></div>
+      </div>
+      <div class="msgs" id="msgs" aria-live="polite"></div>
+    </div>
+
+    <div id="paneView" hidden>
+      <div class="empty" id="viewEmpty">هێشتا وێبێک دروست نەکراوە. لە چاتەوە وەسفی بنووسە.</div>
+      <iframe id="frame" title="پێشبینینی وێب" sandbox="" hidden></iframe>
+    </div>
+
+    <form class="dock" id="dock" autocomplete="off">
+      <button class="plus" type="button" data-soon aria-label="زیادکردنی فایل">+</button>
+      <input id="msgInput" type="text" maxlength="500" placeholder="نامەیەک بنووسە..." aria-label="نامە">
+      <button class="plus" type="button" data-soon aria-label="دەنگ">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+      </button>
+      <button class="send" type="submit" aria-label="ناردن">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 5l-7 7 7 7"/></svg>
+      </button>
+    </form>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="guard.js"></script>
+<script src="ai-builder.js"></script>
+</body>
+</html>
