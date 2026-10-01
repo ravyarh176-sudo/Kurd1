@@ -92,17 +92,21 @@ header{background:${s.headerColor};color:#fff;padding:16px;display:flex;justify-
   async function callAI(prompt) {
     const t = await accessToken();
     if (!t) throw new Error('تکایە دووبارە بچۆ ژوورەوە.');
-    let r, d;
-    try {
-      r = await fetch('/.netlify/functions/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + t },
-        body: JSON.stringify({ prompt, spec: state.spec })
-      });
-      d = await r.json();
-    } catch { throw new Error('پەیوەندی بە سێرڤەرەوە نەکرا. ئینتەرنێتەکەت بپشکنە.'); }
-    if (!r.ok) throw new Error(d.message || 'هەڵەیەک ڕوویدا.');
-    return d;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      let r = null, d = {};
+      try {
+        r = await fetch('/.netlify/functions/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + t },
+          body: JSON.stringify({ prompt, spec: state.spec })
+        });
+        d = await r.json();
+      } catch { d = { retryable: true, conn: true }; } // network error or Netlify timeout page
+      if (r && r.ok && !d.conn) return d;
+      if (d.retryable && attempt < 2) { await new Promise((ok) => setTimeout(ok, 1200)); continue; } // temporary → try again quietly
+      throw new Error(d.conn ? 'پەیوەندی بە سێرڤەرەوە نەکرا یان کاتەکە تەواو بوو. دووبارە تاقی بکەرەوە.'
+        : (d.message || 'هەڵەیەک ڕوویدا.') + (d.detail ? ' [' + d.detail + ']' : ''));
+    }
   }
 
   async function run(text) {
