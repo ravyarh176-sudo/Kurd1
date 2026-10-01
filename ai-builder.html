@@ -24,16 +24,39 @@
     <b>دروستکەری وێب</b>
   </div>
   <span class="who" id="who"></span>
+  <button class="ib" id="adminBtn" type="button" hidden aria-label="پانێڵی ئەدمین">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+  </button>
   <button class="ib" id="themeBtn" type="button" aria-label="تیم">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
   </button>
 </header>
 
 <main>
+  <!-- پانێڵی ئەدمین (تەنها بۆ ئەدمین دەردەکەوێت؛ دەسەڵاتەکان لە داتابەیس و سێرڤەر دەپشکنرێن) -->
+  <section id="admin" hidden>
+    <h1>پانێڵی ئەدمین</h1>
+    <p class="lead">ئەدمین بێ سنووری وێب و داواکارییە.</p>
+    <div class="stats">
+      <div><b id="stOnline">0</b><small>ئۆنلاین ئێستا</small></div>
+      <div><b id="stBusy">0</b><small>ئێستا دروست دەکەن</small></div>
+      <div><b id="stUsers">0</b><small>بەکارهێنەری داواکار</small></div>
+      <div><b id="stReq">0</b><small>کۆی داواکاری</small></div>
+    </div>
+    <h2>ڕێکخستن</h2>
+    <div class="box set">
+      <label>زۆرترین ژمارەی وێب بۆ هەر بەکارهێنەرێک<input id="setSites" type="number" min="0" max="100"></label>
+      <label>زۆرترین داواکاری لە ڕۆژێکدا<input id="setDaily" type="number" min="1" max="500"></label>
+      <button class="go" id="setSave" type="button">پاشەکەوتکردن</button>
+    </div>
+    <h2>بەکارهێنەران</h2>
+    <div id="adUsers"><div class="empty">بارکردن...</div></div>
+  </section>
+
   <!-- شاشەی ١: دەستپێک -->
   <section id="home">
     <h1>وێب سایتەکەت بە ئاسانی دروست بکە</h1>
-    <p class="lead">دروست کراوە بۆدروستکردنی وێب سایت بەئاسانی .</p>
+    <p class="lead">وەسفێکی کورت بنووسە بۆ ئەوەی ژیریی دەستکرد وێب سایتەکەت بۆ دروست بکات.</p>
 
     <div class="box">
       <textarea id="prompt" maxlength="800" placeholder="وەسفی وێب سایتەکەت بکە..."></textarea>
@@ -44,23 +67,10 @@
     </div>
     <div class="err" id="homeErr" hidden></div>
 
-    <h2>ئەو پڕۆژانەی پێشتر دروست کردووە</h2>
-    <div class="grid">
-      <article class="card">
-        <div class="th th-shop"><i></i><i></i><i></i></div>
-        <h3>پڕۆژەی فرۆشگا</h3>
-        <button class="pill" type="button" data-fill="فرۆشگای جل بۆ ژنان دروست بکە، ٥ بەرهەم هەبێت، دیزاینەکە تاریک و مۆدێرن بێت.">بینین</button>
-      </article>
-      <article class="card">
-        <div class="th th-folio"><i></i><i></i><i></i></div>
-        <h3>پۆرتفۆلیۆی کەسی</h3>
-        <button class="pill" type="button" data-fill="پۆرتفۆلیۆی کەسی بۆ دیزاینەرێک، تاریک و مۆدێرن.">بینین</button>
-      </article>
-      <article class="card">
-        <div class="th th-trip"><i></i><i></i><i></i></div>
-        <h3>وێب سایتی گەشتیاری</h3>
-        <button class="pill" type="button" data-fill="وێب سایتی گەشتیاری بۆ کۆمپانیایەکی گەشت، ڕەنگی سەوز و ڕووناک.">بینین</button>
-      </article>
+    <!-- پڕۆژەکان: بەتاڵ و شاراوەیە تا بەکارهێنەر یەکەم وێبی دروست بکات -->
+    <div id="projSection" hidden>
+      <h2>ئەو پڕۆژانەی پێشتر دروست کردووە</h2>
+      <div class="grid" id="projGrid"></div>
     </div>
   </section>
 
@@ -70,6 +80,8 @@
       <button class="tab on" id="tabChat" type="button" role="tab">چاتی من و ئەی ئای</button>
       <button class="tab" id="tabView" type="button" role="tab">بینینی وێب سایت</button>
     </div>
+
+    <button class="newbtn" id="newBtn" type="button">+ وێبی نوێ</button>
 
     <div id="paneChat">
       <div class="botcard">
