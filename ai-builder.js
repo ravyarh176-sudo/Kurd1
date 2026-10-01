@@ -1,313 +1,128 @@
-// Kurd Technology — AI Store Builder, Phase 2.
-// Login/session comes from guard.js. AI calls go to /.netlify/functions/generate
-// (the Gemini key lives only on Netlify). Nothing is published from here.
+/* Kurd Technology — AI Store Builder (mobile-first) */
+:root{
+  --bg:#04110b; --fg:#f3fff8; --mut:rgba(243,255,248,.62);
+  --gl:rgba(255,255,255,.06); --bd:rgba(255,255,255,.13);
+  --g:#1ee66f; --gink:#03230f; --b:#3b82f6; --me:rgba(255,255,255,.08); --bot:rgba(30,230,111,.2);
+  --glow:0 0 26px rgba(30,230,111,.4);
+}
+html[data-theme="light"]{
+  --bg:#eefaf3; --fg:#0b1f14; --mut:rgba(11,31,20,.62);
+  --gl:rgba(255,255,255,.75); --bd:rgba(11,31,20,.13);
+  --me:rgba(11,31,20,.07); --bot:rgba(30,230,111,.22); --glow:0 6px 20px rgba(30,230,111,.35);
+}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--fg);font-family:'Vazirmatn',sans-serif;line-height:1.7;overflow-x:hidden}
+.glow{position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(70% 38% at 100% 100%,rgba(30,230,111,.38),transparent),
+             radial-gradient(60% 30% at 0 0,rgba(30,230,111,.2),transparent)}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--g);outline-offset:2px}
 
-(function () {
-  const $ = (id) => document.getElementById(id);
-  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const state = { spec: null, busy: false, projectId: null };
+/* header */
+.bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:8px;
+  margin:12px auto 0;width:calc(100% - 24px);max-width:536px;padding:8px 10px;
+  border:1px solid var(--bd);border-radius:18px;background:var(--gl);backdrop-filter:blur(14px)}
+.brand{display:flex;align-items:center;gap:8px;flex:1;font-family:'Noto Kufi Arabic',sans-serif;font-size:14px}
+.logo{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--g);color:var(--gink)}
+.logo svg{width:18px;height:18px}
+.who{font-size:11px;color:var(--mut);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ib{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;border:1px solid var(--bd);background:var(--gl)}
+.ib svg{width:18px;height:18px}
 
-  let toastT;
-  function toast(msg) {
-    const t = $('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(toastT);
-    toastT = setTimeout(() => t.classList.remove('show'), 2000);
-  }
+main{width:100%;max-width:560px;margin:0 auto;padding:22px 12px 120px}
 
-  function addMsg(text, who, withBtn) {
-    const d = document.createElement('div');
-    d.className = 'm ' + who;
-    d.textContent = text;
-    if (withBtn) {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.textContent = 'بینینی وێب سایت';
-      b.addEventListener('click', () => setTab('view'));
-      d.appendChild(b);
-    }
-    $('msgs').appendChild(d);
-    d.scrollIntoView({ block: 'end', behavior: 'smooth' });
-    return d;
-  }
-  function typing() {
-    const d = addMsg('', 'ai');
-    d.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
-    return d;
-  }
+/* home */
+h1{font-family:'Noto Kufi Arabic',sans-serif;font-size:26px;line-height:1.5;font-weight:800}
+.lead{color:var(--mut);font-size:14px;margin:6px 0 18px}
+.box{position:relative;border:1px solid var(--bd);border-radius:20px;background:var(--gl);
+  backdrop-filter:blur(12px);padding:14px}
+.box textarea{width:100%;min-height:130px;resize:none;border:0;outline:0;background:none;
+  color:var(--fg);font:inherit;font-size:15px}
+.box textarea::placeholder{color:var(--mut)}
+.go{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:14px;
+  background:var(--g);color:var(--gink);font-weight:700;font-size:16px;box-shadow:var(--glow)}
+.go svg{width:18px;height:18px;transform:scaleX(-1)}
+.go:active,.send:active{transform:scale(.97)}
+.err{margin-top:10px;padding:10px 12px;border-radius:12px;font-size:13px;
+  background:rgba(239,68,68,.14);border:1px solid rgba(239,68,68,.4)}
+h2{font-family:'Noto Kufi Arabic',sans-serif;font-size:19px;margin:30px 0 14px;font-weight:700}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{border:1px solid var(--bd);border-radius:20px;background:var(--gl);padding:10px;
+  backdrop-filter:blur(10px);display:flex;flex-direction:column;gap:8px}
+.card h3{font-size:14px;font-weight:600}
+.pill{align-self:flex-start;padding:6px 20px;border-radius:12px;background:var(--g);color:var(--gink);font-weight:700}
+.th{height:104px;border-radius:12px;padding:10px;display:flex;gap:6px;align-items:flex-end}
+.th i{flex:1;border-radius:6px;background:rgba(255,255,255,.85);height:40%}
+.th i:nth-child(2){height:62%}.th i:nth-child(3){height:30%}
+.th-shop{background:linear-gradient(135deg,#1c1f26,#2b3a36)}
+.th-folio{background:linear-gradient(135deg,#0d0d0d,#2a2a2a)}
+.th-trip{background:linear-gradient(135deg,#2d6a4f,#74c69d)}
 
-  function setTab(name) {
-    const view = name === 'view';
-    $('tabChat').classList.toggle('on', !view);
-    $('tabView').classList.toggle('on', view);
-    $('paneChat').hidden = view;
-    $('paneView').hidden = !view;
-    $('dock').hidden = view;
-  }
-  function showChat() {
-    $('home').hidden = true;
-    $('chat').hidden = false;
-    setTab('chat');
-    window.scrollTo(0, 0);
-  }
+/* chat */
+.tabs{display:flex;gap:6px;padding:5px;border:1px solid rgba(59,130,246,.5);border-radius:16px;background:var(--gl)}
+.tab{flex:1;padding:10px 6px;border-radius:12px;font-weight:600;font-size:14px}
+.tab.on{background:var(--b);color:#fff;box-shadow:0 0 22px rgba(59,130,246,.5)}
+.botcard{display:flex;align-items:center;gap:12px;margin:16px 0;padding:12px;border:1px solid var(--bd);
+  border-radius:18px;background:var(--gl)}
+.botcard b{display:block;font-family:'Noto Kufi Arabic',sans-serif;font-size:14px}
+.botcard small{color:var(--g);font-weight:600}
+.avatar{position:relative;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid var(--bd);color:var(--g)}
+.avatar svg{width:30px;height:30px}
+.dot{position:absolute;bottom:0;inset-inline-end:0;width:13px;height:13px;border-radius:50%;
+  background:var(--g);border:2px solid var(--bg)}
+.msgs{display:flex;flex-direction:column;gap:12px}
+.m{max-width:86%;padding:12px 14px;border-radius:16px;font-size:14.5px;white-space:pre-wrap;word-break:break-word}
+.m.me{align-self:flex-start;background:var(--me)}
+.m.ai{align-self:flex-end;background:var(--bot);border:1px solid rgba(30,230,111,.3)}
+.m button{display:block;margin-top:8px;padding:6px 14px;border-radius:10px;background:var(--g);color:var(--gink);font-weight:700}
+.typing{display:inline-flex;gap:4px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--g);animation:bl 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes bl{50%{opacity:.25}}
+#frame{width:100%;height:calc(100dvh - 200px);min-height:420px;border:1px solid var(--bd);border-radius:18px;background:#fff;margin-top:14px}
+.empty{margin-top:14px;padding:30px 16px;text-align:center;color:var(--mut);border:1px dashed var(--bd);border-radius:18px}
 
-  // ---------- preview (built from the server-cleaned spec; all text escaped) ----------
-  function buildPage(s) {
-    const dark = s.theme === 'dark';
-    const bg = dark ? '#0f1115' : '#f6f7f9', fg = dark ? '#f2f3f5' : '#14161a', card = dark ? '#1a1d24' : '#ffffff';
-    const items = s.products.map((p) =>
-      `<div class="c"><div class="im"></div><h3>${esc(p.name)}</h3><small>${esc(p.description)}</small><p>${esc(p.price)} ${esc(s.currency)}</p><button>زیادکردن بۆ سەبەتە</button></div>`
-    ).join('');
-    return `<!DOCTYPE html><html lang="ckb" dir="rtl"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><style>
-*{box-sizing:border-box;margin:0}
-body{background:${bg};color:${fg};font-family:Tahoma,Arial,sans-serif;font-size:${16 * s.fontScale}px;line-height:1.7}
-header{background:${s.headerColor};color:#fff;padding:16px;display:flex;justify-content:space-between;font-weight:700}
-.hero{padding:30px 16px;text-align:center}.hero p{opacity:.75;margin-top:6px;font-size:.9em}
-.g{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 12px 28px}
-.c{background:${card};border-radius:14px;padding:10px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
-.im{height:90px;border-radius:10px;background:linear-gradient(135deg,${s.accent},${s.accent}33);margin-bottom:8px}
-.c h3{font-size:1em}.c small{display:block;opacity:.65;font-size:.78em}.c p{margin:4px 0 8px;font-weight:700}
-.c button{width:100%;border:0;border-radius:10px;padding:8px;background:${s.accent};color:#fff;font:inherit;font-size:.85em}
-</style></head><body>
-<header><span>${esc(s.storeName)}</span><span>سەبەتە (0)</span></header>
-<div class="hero"><h2>${esc(s.storeName)}</h2><p>${esc(s.tagline)}</p></div>
-<div class="g">${items}</div></body></html>`;
-  }
-  function renderPreview() {
-    const f = $('frame');
-    f.srcdoc = buildPage(state.spec); // sandbox="" → no scripts, no network
-    f.hidden = false;
-    $('viewEmpty').hidden = true;
-  }
+/* input dock */
+.dock{position:fixed;bottom:12px;left:0;right:0;margin:auto;width:calc(100% - 24px);max-width:536px;
+  display:flex;align-items:center;gap:6px;padding:8px;border:1px solid var(--bd);border-radius:22px;
+  background:var(--gl);backdrop-filter:blur(16px);box-shadow:var(--glow)}
+.dock input{flex:1;min-width:0;height:44px;border:0;outline:0;border-radius:16px;padding:0 12px;
+  background:var(--me);color:var(--fg);font:inherit;font-size:15px}
+.plus{width:40px;height:40px;border-radius:50%;font-size:24px;display:grid;place-items:center;flex:none}
+.plus svg{width:20px;height:20px}
+.send{width:46px;height:46px;border-radius:50%;background:var(--b);color:#fff;display:grid;place-items:center;
+  flex:none;box-shadow:0 0 20px rgba(59,130,246,.55)}
+.send svg{width:22px;height:22px}
+.send:disabled{opacity:.5}
 
-  // ---------- talking to our Netlify Function ----------
-  async function accessToken() {
-    let sb = window.kurdtechSupabase;
-    if (!sb && window.supabase) sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-    const { data } = await sb.auth.getSession();
-    return data && data.session ? data.session.access_token : null;
-  }
-  async function callAI(prompt) {
-    const t = await accessToken();
-    if (!t) throw new Error('تکایە دووبارە بچۆ ژوورەوە.');
-    for (let attempt = 0; attempt < 3; attempt++) {
-      let r = null, d = {};
-      try {
-        r = await fetch('/.netlify/functions/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + t },
-          body: JSON.stringify({ prompt, spec: state.spec })
-        });
-        d = await r.json();
-      } catch { d = { retryable: true, conn: true }; } // network error or Netlify timeout page
-      if (r && r.ok && !d.conn) return d;
-      if (d.retryable && attempt < 2) { await new Promise((ok) => setTimeout(ok, 1200)); continue; } // temporary → try again quietly
-      throw new Error(d.conn ? 'پەیوەندی بە سێرڤەرەوە نەکرا یان کاتەکە تەواو بوو. دووبارە تاقی بکەرەوە.'
-        : (d.message || 'هەڵەیەک ڕوویدا.') + (d.detail ? ' [' + d.detail + ']' : ''));
-    }
-  }
+.toast{position:fixed;bottom:90px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;
+  padding:10px 18px;border-radius:14px;background:var(--g);color:var(--gink);font-weight:700;font-size:13px;transition:.25s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
 
-  async function run(text) {
-    if (state.busy) return toast('چاوەڕێ بکە...');
-    state.busy = true;
-    setBusy(true);
-    $('dock').querySelector('.send').disabled = true;
-    const wait = typing();
-    const creating = !state.spec;
-    try {
-      const d = await callAI(text);
-      state.spec = d.spec;
-      renderPreview();
-      await saveProject();
-      wait.remove();
-      addMsg((creating ? 'وێبەکەت دروست کرا.' : 'گۆڕانکارییەکە ئەنجام درا.') +
-        (d.remaining == null ? '\nئەدمین: بێ سنوور.' : `\nئەمڕۆ ${d.remaining} داواکاریت ماوە.`) +
-        (creating ? '\nبۆ نموونە بنووسە: «هێدەرەکە شین بکە» یان «فۆنتەکە گەورەتر بکە».' : ''), 'ai', true);
-    } catch (e) {
-      wait.remove();
-      addMsg('⚠️ ' + e.message, 'ai');
-    } finally {
-      state.busy = false;
-      setBusy(false);
-      $('dock').querySelector('.send').disabled = false;
-    }
-  }
+@media (min-width:600px){ h1{font-size:32px} .grid{grid-template-columns:repeat(3,1fr)} main{max-width:640px} }
+@media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
 
-  // ---------- flows ----------
-  function submitHome() {
-    const text = $('prompt').value.trim();
-    const err = $('homeErr');
-    if (text.length < 5) {
-      err.textContent = 'تکایە وەسفێکی درێژتر بنووسە (کەمتر نییە لە ٥ پیت).';
-      err.hidden = false;
-      return;
-    }
-    err.hidden = true;
-    showChat();
-    addMsg('سڵاو! من ئەی ئای ستۆر بیڵدەرم. زۆر بەخۆشحاڵییەوە یارمەتیت دەدەم بۆ دروستکردنی وێب سایتەکەت.', 'ai');
-    addMsg(text, 'me');
-    run(text);
-  }
-  function submitChat(e) {
-    e.preventDefault();
-    const inp = $('msgInput');
-    const text = inp.value.trim();
-    if (!text || state.busy) return;
-    inp.value = '';
-    addMsg(text, 'me');
-    run(text);
-  }
+/* admin panel */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stats div{border:1px solid var(--bd);border-radius:16px;background:var(--gl);padding:12px;text-align:center}
+.stats b{display:block;font-size:26px;color:var(--g);font-family:'Noto Kufi Arabic',sans-serif}
+.stats small{color:var(--mut);font-size:12px}
+.set label{display:block;font-size:13px;color:var(--mut);margin-bottom:12px}
+.set input{display:block;width:100%;margin-top:6px;height:44px;border-radius:12px;border:1px solid var(--bd);background:var(--me);color:var(--fg);padding:0 12px;font:inherit}
+.urow{border:1px solid var(--bd);border-radius:16px;background:var(--gl);margin-bottom:10px;overflow:hidden}
+.uhead{width:100%;text-align:start;padding:12px;display:flex;flex-direction:column;gap:2px}
+.uhead small{color:var(--mut);direction:ltr;text-align:right}.uhead span{color:var(--g);font-size:12px;font-weight:600}
+.ureqs{padding:0 12px 12px}
+.rq{padding:10px 0;border-top:1px solid var(--bd);display:grid;grid-template-columns:12px 1fr;gap:4px 10px;font-size:13px}
+.rq i{width:10px;height:10px;border-radius:50%;margin-top:7px}.rq small{grid-column:2;color:var(--mut)}
+.f-green{background:#22c55e}.f-blue{background:#3b82f6}.f-yellow{background:#eab308}.f-red{background:#ef4444}
 
-  // ---------- saved projects (each user sees only their own; RLS enforces it) ----------
-  function fix(s) {
-    s = s || {};
-    const hx = (v, d) => (/^#[0-9a-fA-F]{6}$/.test(v) ? v : d);
-    const a = hx(s.accent, '#16a34a');
-    return {
-      storeName: String(s.storeName || 'فرۆشگاکەم').slice(0, 50), tagline: String(s.tagline || '').slice(0, 120),
-      theme: s.theme === 'light' ? 'light' : 'dark', accent: a, headerColor: hx(s.headerColor, a),
-      fontScale: Math.min(1.4, Math.max(0.8, Number(s.fontScale) || 1)), currency: String(s.currency || '$').slice(0, 4),
-      products: (Array.isArray(s.products) ? s.products.slice(0, 8) : []).map((p) => ({
-        name: String((p && p.name) || '').slice(0, 60), description: String((p && p.description) || '').slice(0, 160), price: Number(p && p.price) || 0 }))
-    };
-  }
-  async function saveProject() {
-    const sb = sbc(), s = state.spec;
-    const res = state.projectId
-      ? await sb.from('ai_projects').update({ title: s.storeName, spec: s, updated_at: new Date().toISOString() }).eq('id', state.projectId)
-      : await sb.from('ai_projects').insert({ title: s.storeName, spec: s }).select('id').single();
-    if (res.error) return toast('پڕۆژەکە پاشەکەوت نەکرا');
-    if (!state.projectId && res.data) state.projectId = res.data.id;
-  }
-  async function loadProjects() {
-    const { data, error } = await sbc().from('ai_projects').select('id,title,spec,updated_at')
-      .order('updated_at', { ascending: false }).limit(20);
-    const grid = $('projGrid');
-    grid.textContent = '';
-    if (error || !data || !data.length) { $('projSection').hidden = true; return; } // nothing yet → section stays hidden
-    data.forEach((p) => {
-      const s = fix(p.spec);
-      const c = document.createElement('article');
-      c.className = 'card';
-      c.innerHTML = `<div class="thc" style="background:linear-gradient(135deg,${s.headerColor},${s.accent})"><span>${esc(s.storeName)}</span></div><h3>${esc(p.title)}</h3><small class="mut">${esc(new Date(p.updated_at).toLocaleDateString('ckb'))}</small><div class="crow"><button class="pill" type="button">بینین</button><button class="del" type="button">سڕینەوە</button></div>`;
-      c.querySelector('.pill').addEventListener('click', () => openProject(p, s));
-      c.querySelector('.del').addEventListener('click', async () => {
-        if (!confirm('دڵنیایت لە سڕینەوەی ئەم پڕۆژەیە؟')) return;
-        const r = await sbc().from('ai_projects').delete().eq('id', p.id);
-        if (r.error) toast('نەسڕایەوە'); else loadProjects();
-      });
-      grid.appendChild(c);
-    });
-    $('projSection').hidden = false;
-  }
-  function openProject(p, s) {
-    state.spec = s; state.projectId = p.id;
-    $('msgs').textContent = '';
-    showChat();
-    addMsg('پڕۆژەی «' + p.title + '» کرایەوە. دەتوانیت داوای گۆڕانکاری بکەیت.', 'ai');
-    renderPreview();
-    setTab('view');
-  }
-  function goHome() {
-    state.spec = null; state.projectId = null;
-    $('msgs').textContent = ''; $('prompt').value = '';
-    $('frame').hidden = true; $('frame').srcdoc = ''; $('viewEmpty').hidden = false;
-    $('chat').hidden = true; $('home').hidden = false;
-    loadProjects();
-  }
-
-  // ---------- presence (who is online / generating) ----------
-  const sbc = () => window.kurdtechSupabase || (window.supabase && window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY));
-  let ch = null;
-  async function joinPresence() {
-    const sb = sbc();
-    const { data } = await sb.auth.getSession();
-    const uid = data && data.session && data.session.user.id;
-    if (!uid) return;
-    ch = sb.channel('ai-builder-online', { config: { presence: { key: uid } } });
-    ch.on('presence', { event: 'sync' }, () => { if (!$('admin').hidden) renderLive(); });
-    ch.subscribe((s) => { if (s === 'SUBSCRIBED') ch.track({ busy: false }); });
-  }
-  function setBusy(b) { if (ch) ch.track({ busy: b }); }
-  function renderLive() {
-    const st = ch ? ch.presenceState() : {};
-    const ids = Object.keys(st);
-    $('stOnline').textContent = ids.length;
-    $('stBusy').textContent = ids.filter((k) => st[k].some((m) => m.busy)).length;
-  }
-
-  // ---------- admin panel (UI only; real checks are in RLS + the Function) ----------
-  let prevView = 'home';
-  function openAdmin() {
-    prevView = $('chat').hidden ? 'home' : 'chat';
-    $('home').hidden = true; $('chat').hidden = true; $('admin').hidden = false;
-    renderLive(); loadAdmin();
-  }
-  function closeAdmin() { $('admin').hidden = true; $(prevView).hidden = false; }
-
-  async function loadAdmin() {
-    const sb = sbc();
-    const [u, s] = await Promise.all([
-      sb.rpc('ai_admin_users'),
-      sb.from('ai_settings').select('daily_limit,max_sites').eq('id', 1).maybeSingle()
-    ]);
-    const box = $('adUsers');
-    if (u.error) { box.innerHTML = '<div class="err">هەڵە: ' + esc(u.error.message) + '</div>'; return; }
-    const rows = u.data || [];
-    $('stUsers').textContent = rows.filter((r) => Number(r.requests) > 0).length;
-    $('stReq').textContent = rows.reduce((a, r) => a + Number(r.requests), 0);
-    if (s.data) { $('setSites').value = s.data.max_sites; $('setDaily').value = s.data.daily_limit; }
-    box.textContent = '';
-    rows.forEach((r) => {
-      const d = document.createElement('div');
-      d.className = 'urow';
-      d.innerHTML = `<button type="button" class="uhead"><b>${esc(r.full_name || '—')}</b><small>${esc(r.email || '')}</small><span>${esc(r.requests)} داواکاری • ${esc(r.sites)} وێب</span></button><div class="ureqs" hidden></div>`;
-      d.querySelector('.uhead').addEventListener('click', () => toggleReqs(d, r.user_id));
-      box.appendChild(d);
-    });
-  }
-  async function toggleReqs(row, uid) {
-    const box = row.querySelector('.ureqs');
-    box.hidden = !box.hidden;
-    if (box.hidden || box.dataset.loaded) return;
-    box.dataset.loaded = '1';
-    const { data, error } = await sbc().from('ai_requests')
-      .select('kind,prompt,status,flag,created_at').eq('user_id', uid).order('created_at', { ascending: false }).limit(30);
-    if (error) { box.textContent = error.message; return; }
-    box.innerHTML = (data || []).map((q) =>
-      `<div class="rq"><i class="f-${esc(q.flag)}"></i><p>${esc(q.prompt)}</p><small>${q.kind === 'create' ? 'دروستکردن' : 'دەستکاری'} • ${q.status === 'completed' ? 'تەواو' : 'سەرکەوتوو نەبوو'} • ${new Date(q.created_at).toLocaleString('ckb')}</small></div>`
-    ).join('') || '<small>هیچ داواکارییەک نییە.</small>';
-  }
-  async function initAdmin() {
-    const { data } = await sbc().rpc('is_ai_admin');
-    if (data !== true) return;
-    $('adminBtn').hidden = false;
-    $('adminBtn').addEventListener('click', () => ($('admin').hidden ? openAdmin() : closeAdmin()));
-    $('setSave').addEventListener('click', async () => {
-      const m = parseInt($('setSites').value, 10), dl = parseInt($('setDaily').value, 10);
-      if (!(m >= 0 && m <= 100 && dl >= 1 && dl <= 500)) return toast('ژمارەکان دروست نین');
-      const { error } = await sbc().from('ai_settings').update({ max_sites: m, daily_limit: dl }).eq('id', 1);
-      toast(error ? 'هەڵە: ' + error.message : 'پاشەکەوت کرا ✓');
-    });
-  }
-
-  $('sendBtn').addEventListener('click', submitHome);
-  $('newBtn').addEventListener('click', goHome);
-  $('dock').addEventListener('submit', submitChat);
-  $('tabChat').addEventListener('click', () => setTab('chat'));
-  $('tabView').addEventListener('click', () => setTab('view'));
-  document.querySelectorAll('[data-fill]').forEach((b) =>
-    b.addEventListener('click', () => { $('prompt').value = b.dataset.fill; $('prompt').focus(); window.scrollTo({ top: 0, behavior: 'smooth' }); })
-  );
-  document.querySelectorAll('[data-soon]').forEach((b) =>
-    b.addEventListener('click', () => toast('ئەم تایبەتمەندییە بەم زووانە دێت 🚀'))
-  );
-  window.addEventListener('kurdtech:ready', () => {
-    $('who').textContent = (window.kurdtechProfile && window.kurdtechProfile.full_name) || '';
-    joinPresence();
-    loadProjects();
-    initAdmin();
-  });
-})();
+/* saved projects */
+.thc{height:104px;border-radius:12px;display:flex;align-items:flex-end;padding:10px;color:#fff;font-weight:700;font-size:13px;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+.mut{color:var(--mut);font-size:11px}
+.crow{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.del{font-size:12px;color:var(--mut);text-decoration:underline;padding:4px}
+.newbtn{margin-top:12px;padding:8px 16px;border-radius:12px;border:1px dashed var(--g);color:var(--g);font-weight:600;font-size:13px}
