@@ -6,7 +6,7 @@
 // (not HTML/code); the page template is built in the browser from the cleaned spec.
 
 const GEM = 'https://generativelanguage.googleapis.com/v1beta';
-const DAILY_LIMIT = 20;
+const DEFAULTS = { daily_limit: 20, max_sites: 3 };
 const KEY = process.env.GEMINI_API_KEY;
 const SB = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
 const ANON = process.env.SUPABASE_ANON_KEY;
@@ -75,6 +75,29 @@ async function logRequest(token, row) {
       body: JSON.stringify(row)
     });
   } catch (_) { /* logging must never break the user's request */ }
+}
+
+async function isAdmin(token) {
+  try {
+    const r = await fetch(SB + '/rest/v1/rpc/is_ai_admin', {
+      method: 'POST', headers: sbHeaders(token, { 'Content-Type': 'application/json' }), body: '{}'
+    });
+    return r.ok && (await r.json()) === true;
+  } catch { return false; }
+}
+async function getLimits(token) {
+  try {
+    const r = await fetch(SB + '/rest/v1/ai_settings?select=daily_limit,max_sites&id=eq.1', { headers: sbHeaders(token) });
+    const d = r.ok ? await r.json() : [];
+    return d[0] ? { daily_limit: d[0].daily_limit, max_sites: d[0].max_sites } : DEFAULTS;
+  } catch { return DEFAULTS; }
+}
+async function countCreates(token, uid) {
+  const r = await fetch(`${SB}/rest/v1/ai_requests?select=id&user_id=eq.${uid}&kind=eq.create&status=eq.completed`, {
+    headers: sbHeaders(token, { Prefer: 'count=exact', Range: '0-0' })
+  });
+  if (!r.ok) throw new Error('db');
+  return parseInt((r.headers.get('content-range') || '').split('/')[1], 10) || 0;
 }
 
 // ---------- Gemini ----------
@@ -171,10 +194,18 @@ exports.handler = async (event) => {
     try { current = sanitizeSpec(body.spec); } catch { return fail(400, 'spec', 'پڕۆژەی ئێستا نادروستە.'); }
   }
 
-  let used;
-  try { used = await usedToday(token, user.id); }
-  catch { return fail(503, 'db', 'خشتەی ai_requests نییە. SQL ی فازی ٢ Run بکە.'); }
-  if (used >= DAILY_LIMIT) return fail(429, 'limit', `ئەمڕۆ ${DAILY_LIMIT} داواکاریت بەکارهێنا. سبەی دووبارە تاقی بکەرەوە.`);
+  let used = 0, limits = DEFAULTS;
+  const admin = await isAdmin(token); // checked server-side; admins have no limits
+  if (!admin) {
+    try {
+      limits = await getLimits(token);
+      used = await usedToday(token, user.id);
+      if (used >= limits.daily_limit)
+        return fail(429, 'limit', `ئەمڕۆ ${limits.daily_limit} داواکاریت بەکارهێنا. سبەی دووبارە تاقی بکەرەوە.`);
+      if (!current && (await countCreates(token, user.id)) >= limits.max_sites)
+        return fail(403, 'sites_limit', `تەنها دەتوانیت ${limits.max_sites} وێب سایت دروست بکەیت.`);
+    } catch { return fail(503, 'db', 'خشتەکانی داتابەیس ئامادە نین. SQL ەکانی فازی ٢ و ٢B Run بکە.'); }
+  }
 
   const text = current
     ? `CURRENT_SPEC:\n${JSON.stringify(current)}\n\nUSER_REQUEST:\n"""${prompt}"""`
@@ -209,5 +240,5 @@ exports.handler = async (event) => {
   });
 
   if (!spec) return fail(502, 'ai_failed', 'ژیریی دەستکرد ئێستا وەڵام نادات. چەند چرکەیەکی تر دووبارە تاقی بکەرەوە.');
-  return reply(200, { spec, remaining: DAILY_LIMIT - used - 1 });
+  return reply(200, { spec, remaining: admin ? null : limits.daily_limit - used - 1 });
 };
