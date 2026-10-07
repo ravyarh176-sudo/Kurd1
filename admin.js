@@ -165,6 +165,55 @@ window.addEventListener('kurdtech:ready', async () => {
     return d.innerHTML;
   }
 
+  // ---------- ئامارەکانی CV ----------
+  async function loadCvStats() {
+    const { data, error } = await supabase.from('cv_usage').select('satisfied');
+    if (error) { console.error(error); return; }
+    const rows = data || [];
+    const yes = rows.filter(r => r.satisfied === true).length;
+    const no = rows.filter(r => r.satisfied === false).length;
+    if ($('statCvTotal')) $('statCvTotal').textContent = rows.length;
+    if ($('statCvYes')) $('statCvYes').textContent = yes;
+    if ($('statCvNo')) $('statCvNo').textContent = no;
+    if ($('statCvPct')) {
+      $('statCvPct').textContent = (yes + no) > 0
+        ? `ڕێژەی ڕەزامەندی: %${Math.round(yes * 100 / (yes + no))} (لە ${yes + no} وەڵام)`
+        : 'هێشتا کەس وەڵامی نەداوەتەوە';
+    }
+  }
+
+  // ---------- قوفڵکردنی بەشەکان ----------
+  async function loadLocks() {
+    const box = $('lockList');
+    if (!box) return;
+    const { data, error } = await supabase
+      .from('site_sections')
+      .select('id, title, is_locked')
+      .order('sort_order', { ascending: true });
+    if (error) { box.innerHTML = '<div class="loading-hint">نەتوانرا بەشەکان بار بکرێن</div>'; return; }
+    box.innerHTML = (data || []).map(s => `
+      <div class="user-card" style="cursor:default;">
+        <div class="uc-avatar">${s.is_locked ? '🔒' : '🔓'}</div>
+        <div class="uc-info"><div class="uc-name">${escapeText(s.title || 'بێ ناو')}</div>
+          <div class="uc-sub">${s.is_locked ? 'قوفڵکراوە' : 'کراوەیە'}</div></div>
+        <button type="button" class="lock-toggle" data-id="${s.id}" data-lock="${s.is_locked ? '0' : '1'}"
+          style="border:none;border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer;background:${s.is_locked ? '#4ADE80' : '#FF6B7A'};color:#10151f;">
+          ${s.is_locked ? 'کردنەوە' : 'قوفڵکردن'}</button>
+      </div>`).join('') || '<div class="loading-hint">هیچ بەشێک نییە</div>';
+  }
+  const lockBox = $('lockList');
+  if (lockBox) lockBox.addEventListener('click', async (e) => {
+    const b = e.target.closest('.lock-toggle');
+    if (!b) return;
+    b.disabled = true;
+    const { error } = await supabase.from('site_sections')
+      .update({ is_locked: b.dataset.lock === '1' }).eq('id', b.dataset.id);
+    if (error) { alert('نەتوانرا بگۆڕدرێت. SQLەکە ڕەن کردووە؟'); b.disabled = false; return; }
+    loadLocks();
+  });
+
   // دەستپێکردن
   loadUsers();
+  loadCvStats();
+  loadLocks();
 });
