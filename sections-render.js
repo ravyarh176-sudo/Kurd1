@@ -58,6 +58,22 @@ function kurdtechRenderSectionCard(section) {
   `;
   tag.querySelector('h3').textContent = section.title || '';
   tag.querySelector('p').textContent = section.description || '';
+
+  // قوفڵکراو لەلایەن ئادمین
+  if (section.is_locked) {
+    const isOwner = window.kurdtechProfile && window.kurdtechProfile.role === 'owner';
+    tag.insertAdjacentHTML('afterbegin', '<span class="lock-badge">🔒</span>');
+    if (!isOwner) {
+      tag.classList.add('is-locked');
+      tag.removeAttribute('href');
+      tag.removeAttribute('target');
+      tag.style.cursor = 'pointer';
+      tag.addEventListener('click', (e) => {
+        e.preventDefault();
+        kurdtechShowToast('ئەم بەشە لەلایەن ئادمین قوفڵ کراوە 🔒');
+      });
+    }
+  }
   return tag;
 }
 
