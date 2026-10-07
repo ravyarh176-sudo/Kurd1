@@ -1,0 +1,174 @@
+/* ===== cv-extras.css — تەنها زیادکراوە، هیچ شتێکی کۆن ناگۆڕێت ===== */
+
+/* ---- 1) گەلەری ١٠٠ دیزاین ---- */
+#templatePicker{ display:none; }                       /* هەڵبژێرەری کۆن: دیزاینەکانی ئێستا لە گەلەریدا هەن */
+.gallery-sheet{ max-width:1100px; height:94vh; max-height:94vh; }
+.gal-filters{ display:flex; gap:8px; overflow-x:auto; padding:2px 0 14px; scrollbar-width:none; }
+.gal-filters::-webkit-scrollbar{ display:none; }
+.gal-chip{
+  flex-shrink:0; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.05);
+  color:rgba(255,255,255,.8); font:600 12px 'Vazirmatn',sans-serif; padding:7px 14px;
+  border-radius:999px; cursor:pointer;
+}
+.gal-chip.active{ border-color:var(--gold); background:rgba(253,186,18,.16); color:#fff; }
+.gal-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; padding-bottom:10px; }
+@media (min-width:640px){ .gal-grid{ grid-template-columns:repeat(3,1fr); } }
+@media (min-width:900px){ .gal-grid{ grid-template-columns:repeat(5,1fr); } }
+.gal-card{
+  position:relative; border:2px solid rgba(255,255,255,.08); border-radius:14px; overflow:hidden;
+  background:#0c1018; cursor:pointer; padding:0; text-align:inherit;
+  transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.gal-card:hover{ transform:translateY(-3px); border-color:rgba(253,186,18,.6); box-shadow:0 14px 30px -12px rgba(0,0,0,.7); }
+.gal-card.active{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(253,186,18,.25); }
+.gal-thumb{ position:relative; width:100%; aspect-ratio:560/760; overflow:hidden; background:#fff; pointer-events:none; }
+.gal-thumb .paper{
+  position:absolute; top:0; right:0; width:560px !important; max-width:none !important;
+  min-height:760px; margin:0; border-radius:0; box-shadow:none;
+  transform-origin:top right; transform:scale(var(--s,.3));
+}
+.gal-thumb .paper .p-header::after{ display:none; }
+.gal-thumb-skel{ position:absolute; inset:0; background:linear-gradient(110deg,#1a2030 30%,#242c40 50%,#1a2030 70%); background-size:200% 100%; animation:galSk 1.2s linear infinite; }
+@keyframes galSk{ to{ background-position:-200% 0; } }
+.gal-meta{
+  display:flex; align-items:center; justify-content:space-between; gap:6px;
+  padding:8px 10px; background:#11161F; font-size:11px; color:rgba(255,255,255,.7);
+}
+.gal-meta b{ color:#fff; font-family:'Noto Kufi Arabic',sans-serif; font-weight:700; }
+.gal-check{
+  position:absolute; top:8px; left:8px; z-index:3; width:24px; height:24px; border-radius:50%;
+  background:var(--gold); color:#241800; font-weight:800; font-size:13px; display:none;
+  align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,.4);
+}
+.gal-card.active .gal-check{ display:flex; }
+
+/* ڕێک وەک کاغەزی ڕاستەقینە لە مۆبایلیشدا (بۆ وێنە بچووکەکان) */
+@media (max-width:600px){
+  .gal-thumb .paper{ padding:38px 34px; }
+  .gal-thumb .p-header{ margin:-38px -34px 20px; padding:22px 22px 20px; flex-direction:row; text-align:right; }
+  .gal-thumb .paper[data-tpl^="sidebar"]{ flex-direction:row !important; padding:0; }
+  .gal-thumb .paper[data-tpl^="sidebar"] .p-side{ width:170px !important; padding:30px 16px !important; }
+  .gal-thumb .paper[data-tpl^="sidebar"] .p-main{ padding:32px 24px !important; }
+  .gal-thumb .paper[data-tpl^="sidebar"] .p-header{ flex-direction:column !important; text-align:center; margin:0 0 22px; padding:0; }
+  .gal-thumb .paper[data-tpl^="minimal"] .p-header{ margin:0 0 18px; padding:0 0 14px; }
+  .gal-thumb .paper[data-tpl^="geometric"] .p-header{ margin:-38px -34px 10px; padding:26px 26px 46px; }
+  .gal-thumb .paper[data-tpl^="overlap"] .p-header{ margin:-38px -34px 22px; padding:0 24px 22px; flex-direction:column; text-align:center; }
+  .view-stage .paper{ padding:38px 34px; }
+  .view-stage .p-header{ margin:-38px -34px 20px; padding:22px 22px 20px; flex-direction:row; text-align:right; }
+  .view-stage .paper[data-tpl^="sidebar"]{ flex-direction:row !important; padding:0; }
+  .view-stage .paper[data-tpl^="sidebar"] .p-side{ width:170px !important; padding:30px 16px !important; }
+  .view-stage .paper[data-tpl^="sidebar"] .p-main{ padding:32px 24px !important; }
+  .view-stage .paper[data-tpl^="sidebar"] .p-header{ flex-direction:column !important; text-align:center; margin:0 0 22px; padding:0; }
+  .view-stage .paper[data-tpl^="minimal"] .p-header{ margin:0 0 18px; padding:0 0 14px; }
+  .view-stage .paper[data-tpl^="geometric"] .p-header{ margin:-38px -34px 10px; padding:26px 26px 46px; }
+  .view-stage .paper[data-tpl^="overlap"] .p-header{ margin:-38px -34px 22px; padding:0 24px 22px; flex-direction:column; text-align:center; }
+}
+
+/* ---- دیزاینە نوێیەکان (data-gal) — هەموویان لەسەر کۆنەکان دەوەستن ---- */
+.paper[data-tpl^="classic"] .p-header{
+  background:linear-gradient(120deg,var(--h1,#12182A) 0%,var(--h2,#1E2A45) 55%,var(--accent-deep) 160%);
+}
+.paper[data-tpl^="sidebar"][data-gal] .p-side{ background:linear-gradient(180deg,var(--h2),var(--h1)); }
+.paper[data-tpl^="minimal"][data-gal] .p-section-title::before{ background:var(--accent); }
+.paper[data-tpl^="minimal"][data-gal] .p-title{ color:var(--accent-deep); }
+.paper[data-tpl^="minimal"][data-gal] .p-photo-wrap{ border-color:var(--accent); }
+.paper[data-gal][data-font="kufi"] .p-header h1,
+.paper[data-gal][data-font="kufi"] .p-section-title{ font-family:'Noto Kufi Arabic',sans-serif; }
+.paper[data-gal][data-font="vaz"] .p-header h1,
+.paper[data-gal][data-font="vaz"] .p-section-title{ font-family:'Vazirmatn',sans-serif; font-weight:800; }
+.paper[data-gal][data-bg="cream"]{ background:#FFFBF1; }
+.paper[data-gal][data-bg="mist"]{ background:#F4F7FB; }
+/* ستایلی ناونیشانی بەش (تەنها بۆ کلاسیک / کارت / سادە) */
+.paper[data-gal][data-st="pill"]:not([data-tpl^="geometric"]):not([data-tpl^="sidebar"]) .p-section-title{
+  display:inline-flex; background:var(--tag-bg); color:var(--tag-text); padding:5px 14px; border-radius:999px; border-bottom:none;
+}
+.paper[data-gal][data-st="pill"]:not([data-tpl^="geometric"]):not([data-tpl^="sidebar"]) .p-section-title::before{ display:none; }
+.paper[data-gal][data-st="line"]:not([data-tpl^="geometric"]):not([data-tpl^="sidebar"]) .p-section-title{ border-bottom:2px solid var(--accent); }
+.paper[data-gal][data-st="solid"]:not([data-tpl^="geometric"]):not([data-tpl^="sidebar"]) .p-section-title{
+  border-bottom:none; background:linear-gradient(90deg,var(--accent-deep),var(--accent)); color:#fff; padding:5px 12px; border-radius:6px;
+}
+.paper[data-gal][data-st="solid"]:not([data-tpl^="geometric"]):not([data-tpl^="sidebar"]) .p-section-title::before{ display:none; }
+
+@media print{
+  .paper[data-gal][data-tpl^="geometric"] .p-header{ background:var(--accent-deep) !important; }
+  .paper[data-gal][data-tpl^="geometric"] .p-section-title{ background:var(--accent) !important; color:#fff !important; }
+  .paper[data-gal][data-tpl^="geometric"] .p-item-dates,
+  .paper[data-gal][data-tpl^="geometric"] .p-tag{ background:var(--tag-bg) !important; color:var(--tag-text) !important; border-color:var(--tag-border) !important; }
+  .paper[data-gal][data-tpl^="overlap"] .p-header::before{ background:linear-gradient(120deg,var(--accent-deep),var(--accent)) !important; }
+  .paper[data-gal][data-tpl^="overlap"] .p-section-title::before{ background:var(--accent) !important; }
+  .paper[data-gal][data-tpl^="overlap"] .p-item-dates,
+  .paper[data-gal][data-tpl^="overlap"] .p-tag{ background:var(--tag-bg) !important; color:var(--tag-text) !important; border-color:var(--tag-border) !important; }
+  .paper[data-gal][data-tpl^="sidebar"] .p-side{ background:linear-gradient(180deg,var(--h2),var(--h1)) !important; }
+  .paper[data-gal][data-tpl^="sidebar"] .p-main .p-item-dates{ background:var(--tag-bg) !important; color:var(--tag-text) !important; }
+  .paper[data-gal][data-tpl^="classic"] .p-header{ background:linear-gradient(120deg,var(--h1),var(--h2) 55%,var(--accent-deep) 160%) !important; }
+  .paper[data-gal][data-tpl^="classic"] .p-section-title::before{ background:var(--accent) !important; }
+  .paper[data-gal][data-tpl^="classic"] .p-photo-wrap{ border-color:var(--accent) !important; }
+  .paper[data-gal][data-tpl^="classic"] .p-item-dates,
+  .paper[data-gal][data-tpl^="classic"] .p-tag{ background:var(--tag-bg) !important; color:var(--tag-text) !important; border-color:var(--tag-border) !important; }
+  .paper[data-gal][data-tpl^="minimal"] .p-section-title::before{ background:var(--accent) !important; }
+}
+
+/* ---- 2) بەشی تایبەت بە خۆت (چەند لاینێک) ---- */
+.sec-custom{ order:95; }
+.sec-custom .p-section{ margin-bottom:16px; }
+.cx-lines{ display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+.cx-line{ display:flex; gap:8px; align-items:center; }
+.cx-line input{
+  flex:1; min-width:0; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14);
+  color:#fff; border-radius:10px; padding:9px 12px; font:500 13px 'Vazirmatn',sans-serif;
+}
+.cx-line-del{
+  width:30px; height:30px; flex-shrink:0; border-radius:50%; border:none; cursor:pointer;
+  background:rgba(206,17,38,.18); color:#ff8b98; font-size:12px;
+}
+.cx-add-line{
+  align-self:flex-start; margin-top:4px; border:1px dashed rgba(253,186,18,.5); background:transparent;
+  color:var(--gold); font:700 12px 'Noto Kufi Arabic',sans-serif; padding:7px 14px; border-radius:10px; cursor:pointer;
+}
+
+/* ---- 3) دوگمەی چاو + پیشاندانی CV ---- */
+.btn-eye{
+  display:flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:12px;
+  border:1px solid rgba(253,186,18,.45); background:rgba(253,186,18,.12); color:var(--gold); cursor:pointer;
+}
+.btn-eye svg{ width:20px; height:20px; }
+.view-overlay{
+  position:fixed; inset:0; z-index:80; background:rgba(6,9,16,.92); display:none; flex-direction:column;
+}
+.view-overlay.open{ display:flex; }
+.view-bar{
+  display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px 14px;
+  border-bottom:1px solid rgba(255,255,255,.08); flex-shrink:0;
+}
+.view-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+.view-btn{
+  border:none; cursor:pointer; padding:9px 14px; border-radius:10px; font:700 12.5px 'Noto Kufi Arabic',sans-serif;
+  background:linear-gradient(135deg,var(--gold),#E9A400); color:#241800; display:flex; align-items:center; gap:6px;
+}
+.view-btn.alt{ background:rgba(255,255,255,.1); color:#fff; }
+.view-btn:disabled{ opacity:.6; }
+.view-close{ width:34px; height:34px; border-radius:50%; border:none; background:rgba(255,255,255,.1); color:#fff; cursor:pointer; }
+.view-stage{ flex:1; overflow:auto; padding:16px; display:flex; justify-content:center; align-items:flex-start; }
+.view-stage .view-holder{ position:relative; flex-shrink:0; }
+.view-stage .paper{ position:absolute; top:0; right:0; transform-origin:top right; max-width:none !important; width:560px !important; margin:0; }
+@media print{ .view-overlay{ display:none !important; } }
+
+/* ---- 4) پەیامی ڕەزامەندی ---- */
+.fb-overlay{
+  position:fixed; inset:0; z-index:90; background:rgba(6,9,16,.75); backdrop-filter:blur(5px);
+  display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity .2s;
+}
+.fb-overlay.open{ opacity:1; pointer-events:auto; }
+.fb-card{
+  width:100%; max-width:360px; background:#11161F; border:1px solid rgba(255,255,255,.12);
+  border-radius:22px; padding:26px 22px 20px; text-align:center; color:#fff;
+}
+.fb-card .fb-emoji{ font-size:38px; margin-bottom:6px; }
+.fb-card h3{ font:700 16px 'Noto Kufi Arabic',sans-serif; margin-bottom:6px; }
+.fb-card p{ font-size:12.5px; color:rgba(255,255,255,.65); line-height:1.8; margin-bottom:16px; }
+.fb-row{ display:flex; gap:10px; }
+.fb-btn{ flex:1; border:none; cursor:pointer; padding:13px 8px; border-radius:14px; font:700 13px 'Noto Kufi Arabic',sans-serif; }
+.fb-yes{ background:linear-gradient(135deg,#34D399,#0C7A3D); color:#fff; }
+.fb-no{ background:rgba(255,255,255,.09); color:#fff; border:1px solid rgba(255,255,255,.16); }
+.fb-later{ margin-top:12px; background:none; border:none; color:rgba(255,255,255,.45); font-size:11.5px; cursor:pointer; }
+.fb-thanks{ padding:10px 0 4px; font:700 15px 'Noto Kufi Arabic',sans-serif; }
