@@ -172,3 +172,37 @@
 .fb-no{ background:rgba(255,255,255,.09); color:#fff; border:1px solid rgba(255,255,255,.16); }
 .fb-later{ margin-top:12px; background:none; border:none; color:rgba(255,255,255,.45); font-size:11.5px; cursor:pointer; }
 .fb-thanks{ padding:10px 0 4px; font:700 15px 'Noto Kufi Arabic',sans-serif; }
+
+/* ===== ٥٠ دیزاینی نوێ (data-hd / data-photo) — بۆ کۆتایی cv-extras.css ===== */
+.paper[data-hd]{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+.paper[data-photo="sq"] .p-photo-wrap{ border-radius:5px; }
+.paper[data-photo="soft"] .p-photo-wrap{ border-radius:20px; }
+
+/* سەرەوەی کلاسیک: ڕەنگ بە ڕەنگ */
+.paper[data-tpl^="classic"][data-hd="grad"] .p-header{ background:linear-gradient(120deg,var(--accent-deep),var(--accent)); }
+.paper[data-tpl^="classic"][data-hd="grad"] .p-title{ color:#fff; opacity:.92; }
+.paper[data-tpl^="classic"][data-hd="grad"] .p-photo-wrap{ border-color:#fff; }
+/* سەرەوەی کلاسیک: ڕووناک */
+.paper[data-tpl^="classic"][data-hd="light"] .p-header{ background:var(--soft); border-bottom:4px solid var(--accent); }
+.paper[data-tpl^="classic"][data-hd="light"] .p-header h1{ color:var(--h1); }
+.paper[data-tpl^="classic"][data-hd="light"] .p-title{ color:var(--accent-deep); }
+.paper[data-tpl^="classic"][data-hd="light"] .p-contact{ color:#444; }
+.paper[data-tpl^="classic"][data-hd="light"] .p-contact .sep{ color:#aaa; }
+.paper[data-tpl^="classic"][data-hd="light"] .p-photo-wrap{ border-color:var(--accent-deep); background:#fff; }
+
+/* لای (Sidebar): گرادیێنت */
+.paper[data-tpl^="sidebar"][data-hd="grad"] .p-side{ background:linear-gradient(180deg,var(--accent-deep),var(--accent)); }
+.paper[data-tpl^="sidebar"][data-hd="grad"] .p-title{ color:#fff; opacity:.92; }
+.paper[data-tpl^="sidebar"][data-hd="grad"] .p-photo-wrap{ border-color:#fff; }
+/* لای (Sidebar): ڕووناک */
+.paper[data-tpl^="sidebar"][data-hd="light"] .p-side{
+  background:var(--soft); color:#222;
+  --tag-bg:#fff; --tag-text:var(--accent-deep); --tag-border:var(--accent);
+}
+.paper[data-tpl^="sidebar"][data-hd="light"] .p-side .p-header h1{ color:var(--h1); }
+.paper[data-tpl^="sidebar"][data-hd="light"] .p-side .p-title{ color:var(--accent-deep); }
+.paper[data-tpl^="sidebar"][data-hd="light"] .p-side .p-contact{ color:#444; }
+.paper[data-tpl^="sidebar"][data-hd="light"] .p-side .p-section-title{ color:var(--accent-deep); border-bottom-color:var(--accent); }
+.paper[data-tpl^="sidebar"][data-hd="light"] .p-lang-bar{ background:rgba(0,0,0,.1); }
+.paper[data-tpl^="sidebar"][data-hd="light"] .p-photo-wrap{ border-color:var(--accent-deep); background:#fff; }
+.gal-thumb .paper[data-tpl^="sidebar"][data-hd="light"] .p-header h1{ color:var(--h1); }
