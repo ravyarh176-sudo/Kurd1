@@ -53,14 +53,50 @@
     });
   }
 
-  const VAR_NAMES = ['--accent', '--accent-deep', '--tag-bg', '--tag-text', '--tag-border', '--h1', '--h2'];
+  // ===== ٥٠ دیزاینی نوێ (ژمارە ١٠١ تا ١٥٠) — ئەوانی کۆن وەک خۆیان ماونەتەوە =====
+  const PAL2 = [
+    ['#2563EB', '#0B2A5B'], ['#D4A017', '#0B1F3A'], ['#14B8A6', '#0F4C5C'], ['#F97316', '#7C2D12'],
+    ['#D946EF', '#4C1D95'], ['#22C55E', '#14532D'], ['#EF4444', '#7F1D1D'], ['#F43F5E', '#881337'],
+    ['#E0A526', '#3F2A05'], ['#0EA5E9', '#075985'], ['#FB923C', '#9A3412'], ['#06B6D4', '#1E293B'],
+    ['#10B981', '#064E3B'], ['#6366F1', '#312E81'], ['#84CC16', '#365314'], ['#C08A3E', '#4A2C0A'],
+    ['#64748B', '#0F172A'], ['#FF6B6B', '#6B1D1D'], ['#8B5CF6', '#2E1065'], ['#2DD4BF', '#134E4A']
+  ];
+  // شێوە : جۆری سەرەوە / لای : شێوەی وێنە
+  const ND_SPEC = [
+    'sidebar:solid:round', 'sidebar:grad:round', 'sidebar:light:round', 'classic:solid:round', 'classic:grad:soft',
+    'classic:light:round', 'minimal:solid:round', 'geometric:solid:round', 'overlap:solid:round', 'sidebar:solid:sq',
+    'sidebar:grad:soft', 'sidebar:light:soft', 'classic:solid:sq', 'classic:light:soft', 'classic:grad:round',
+    'minimal:solid:sq', 'geometric:solid:soft', 'overlap:solid:soft', 'sidebar:solid:soft', 'sidebar:grad:sq',
+    'sidebar:light:sq', 'classic:solid:soft', 'classic:grad:sq', 'classic:light:sq', 'minimal:solid:soft',
+    'geometric:solid:sq', 'overlap:solid:sq', 'sidebar:solid:round', 'sidebar:grad:round', 'sidebar:light:round',
+    'classic:solid:round', 'classic:grad:soft', 'classic:light:round', 'minimal:solid:round', 'geometric:solid:round',
+    'overlap:solid:round', 'sidebar:solid:sq', 'sidebar:grad:soft', 'sidebar:light:soft', 'classic:solid:sq',
+    'classic:grad:round', 'classic:light:soft', 'minimal:solid:sq', 'geometric:solid:soft', 'overlap:solid:soft',
+    'sidebar:solid:soft', 'sidebar:grad:sq', 'sidebar:light:sq', 'classic:solid:round', 'sidebar:grad:round'
+  ];
+  ND_SPEC.forEach((spec, i) => {
+    const [shape, hd, photo] = spec.split(':');
+    const [accent, deep] = PAL2[(i * 7 + 3) % 20];
+    DESIGNS.push({
+      id: 101 + i, grp: 'new', shape, tpl: shape + '-n' + i, hd, photo,
+      vars: {
+        '--accent': accent, '--accent-deep': deep,
+        '--tag-bg': mix(accent, '#ffffff', 0.86), '--tag-text': deep, '--tag-border': mix(accent, '#ffffff', 0.6),
+        '--h1': mix(deep, '#000000', 0.55), '--h2': mix(deep, '#000000', 0.2), '--soft': mix(accent, '#ffffff', 0.9)
+      },
+      font: FONTS[i % 2], bg: BGS[i % 3], st: STS[(i + 1) % 4]
+    });
+  });
+
+  const VAR_NAMES = ['--accent', '--accent-deep', '--tag-bg', '--tag-text', '--tag-border', '--h1', '--h2', '--soft'];
   function styleEl(el, d) {
-    ['data-gal', 'data-font', 'data-bg', 'data-st'].forEach(a => el.removeAttribute(a));
+    ['data-gal', 'data-font', 'data-bg', 'data-st', 'data-hd', 'data-photo'].forEach(a => el.removeAttribute(a));
     VAR_NAMES.forEach(v => el.style.removeProperty(v));
     el.dataset.tpl = d.tpl;
     if (d.vars) {
       el.setAttribute('data-gal', '1');
       el.dataset.font = d.font; el.dataset.bg = d.bg; el.dataset.st = d.st;
+      if (d.hd) { el.dataset.hd = d.hd; el.dataset.photo = d.photo; }
       Object.keys(d.vars).forEach(k => el.style.setProperty(k, d.vars[k]));
     }
   }
@@ -81,17 +117,18 @@
 
   // نووسینی دوگمەکە
   const countEl = document.querySelector('.open-gallery-btn .gallery-count');
-  if (countEl) countEl.textContent = '(' + (100).toLocaleString('ar-EG') + ' دیزاین)';
+  if (countEl) countEl.textContent = '(' + DESIGNS.length.toLocaleString('ar-EG') + ' دیزاین)';
 
   // ---------- گەلەری ----------
   const overlay = $('galleryOverlay');
   const galBody = overlay && overlay.querySelector('.gallery-body');
   const heading = overlay && overlay.querySelector('.gallery-head h2');
-  if (heading) heading.textContent = 'دیزاینی CVـەکەت هەڵبژێرە — ١٠٠ دیزاین';
+  if (heading) heading.textContent = 'دیزاینی CVـەکەت هەڵبژێرە — ' + DESIGNS.length.toLocaleString('ar-EG') + ' دیزاین';
 
   const filters = document.createElement('div');
   filters.className = 'gal-filters';
-  filters.innerHTML = '<button type="button" class="gal-chip active" data-f="all">هەموو (١٠٠)</button>' +
+  filters.innerHTML = '<button type="button" class="gal-chip active" data-f="all">هەموو (' + DESIGNS.length.toLocaleString('ar-EG') + ')</button>' +
+    '<button type="button" class="gal-chip" data-f="new">✨ نوێ (٥٠)</button>' +
     SHAPES.map(s => `<button type="button" class="gal-chip" data-f="${s}">${SHAPE_LABEL[s]}</button>`).join('');
   const grid = document.createElement('div');
   grid.className = 'gal-grid';
@@ -126,7 +163,7 @@
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'gal-card' + (d.id === currentId ? ' active' : '');
-      card.dataset.idx = idx; card.dataset.shape = d.shape;
+      card.dataset.idx = idx; card.dataset.shape = d.shape; card.dataset.grp = d.grp || '';
       card.innerHTML = `<span class="gal-check">✓</span><div class="gal-thumb"><div class="gal-thumb-skel"></div></div>
         <div class="gal-meta"><b>${d.id.toLocaleString('ar-EG')}</b><span>${SHAPE_LABEL[d.shape]}</span></div>`;
       card.addEventListener('click', () => {
@@ -142,7 +179,7 @@
   }
 
   function applyFilter(f) {
-    grid.querySelectorAll('.gal-card').forEach(c => { c.hidden = !(f === 'all' || c.dataset.shape === f); });
+    grid.querySelectorAll('.gal-card').forEach(c => { c.hidden = !(f === 'all' || c.dataset.shape === f || (f === 'new' && c.dataset.grp === 'new')); });
   }
   filters.addEventListener('click', (e) => {
     const b = e.target.closest('.gal-chip'); if (!b) return;
