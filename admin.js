@@ -212,7 +212,36 @@ window.addEventListener('kurdtech:ready', async () => {
     loadLocks();
   });
 
+  // ---------- ئامێرەکان (قوفڵی ئامێر) ----------
+  async function loadDevices() {
+    const box = $('deviceList');
+    if (!box) return;
+    const { data, error } = await supabase.rpc('admin_list_devices');
+    if (error) { box.innerHTML = '<div class="loading-hint">نەتوانرا ئامێرەکان بار بکرێن. SQLەکە ڕەن کردووە؟</div>'; return; }
+    box.innerHTML = (data || []).map(d => `
+      <div class="user-card" style="cursor:default;">
+        <div class="uc-avatar">${d.blocked ? '⛔' : '📱'}</div>
+        <div class="uc-info">
+          <div class="uc-name">${escapeText(d.full_name || 'بەکارهێنەر')} — ${escapeText(d.email || '')}</div>
+          <div class="uc-sub" dir="ltr" style="text-align:right;">${escapeText(d.model || '')} • ${escapeText(d.ip || '')}<br>${d.last_seen ? new Date(d.last_seen).toLocaleString() : ''}</div>
+        </div>
+        <button type="button" class="dev-release" data-id="${escapeText(d.device_id)}"
+          style="border:none;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer;background:#FDBA12;color:#241800;">ئازادکردن</button>
+      </div>`).join('') || '<div class="loading-hint">هیچ ئامێرێک تۆمار نەکراوە</div>';
+  }
+  const devBox = $('deviceList');
+  if (devBox) devBox.addEventListener('click', async (e) => {
+    const b = e.target.closest('.dev-release');
+    if (!b) return;
+    if (!confirm('ئەم ئامێرە ئازاد بکرێت؟ دەتوانێت بە ئیمەیڵی تر بچێتە ژوورەوە.')) return;
+    b.disabled = true;
+    const { error } = await supabase.rpc('admin_release_device', { p_device_id: b.dataset.id });
+    if (error) { alert('نەتوانرا ئازاد بکرێت.'); b.disabled = false; return; }
+    loadDevices();
+  });
+
   // دەستپێکردن
+  loadDevices();
   loadUsers();
   loadCvStats();
   loadLocks();
