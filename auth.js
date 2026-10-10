@@ -21,7 +21,8 @@
 
   const supabase = window.supabase.createClient(
     window.SUPABASE_URL || '',
-    window.SUPABASE_ANON_KEY || ''
+    window.SUPABASE_ANON_KEY || '',
+    { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
   );
 
   // ---------- Helpers ----------
@@ -55,9 +56,14 @@
     clearError('authError');
     const btn = $('googleBtn');
     setBusy(btn, '...چاوەڕوان بە');
+    // ئەگەر ئەم ئامێرە پێشتر بە ئیمەیڵێک چووبێتە ژوورەوە، گووگڵ هەمان ئیمەیڵ پێشنیار دەکات
+    const locked = window.KurdDevice && window.KurdDevice.lockedEmail();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/index.html' }
+      options: {
+        redirectTo: window.location.origin + '/index.html',
+        queryParams: locked ? { login_hint: locked } : {}
+      }
     });
     if (error) {
       showError('authError', friendlyError(error));
@@ -106,6 +112,17 @@
     if (!session) {
       showStep('stepWelcome');
       return;
+    }
+
+    // قوفڵی ئامێر: ئەگەر ئەم ئامێرە بلۆک کرابێت یان بە ئەکاونتێکی تر بەسترابێتەوە
+    if (window.KurdDevice) {
+      const st = await window.KurdDevice.check(supabase);
+      if (window.KurdDevice.isBad(st)) {
+        await supabase.auth.signOut();
+        showStep('stepWelcome');
+        showError('authError', window.KurdDevice.message(st));
+        return;
+      }
     }
 
     // Already signed in (fresh Google redirect, or a returning visitor
