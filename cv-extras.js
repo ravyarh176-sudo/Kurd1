@@ -115,6 +115,31 @@
     if (found) applyDesign(found);
   } catch (e) {}
 
+  // ===== API بۆ «کۆدی زیادە»ی ئەدمین: KurdCV.addDesign({...}) =====
+  window.KurdCV = {
+    designs: DESIGNS,
+    addDesign(o) {
+      if (!o || !o.id || DESIGNS.some(x => x.id === o.id)) return false;
+      const shape = SHAPES.includes(o.shape) ? o.shape : 'classic';
+      const d = { id: o.id, grp: 'mine', shape, tpl: o.tpl || (shape + '-x' + o.id) };
+      if (o.accent) {
+        const accent = o.accent, deep = o.deep || mix(accent, '#000000', 0.55);
+        d.hd = o.hd || 'solid'; d.photo = o.photo || 'round';
+        d.vars = {
+          '--accent': accent, '--accent-deep': deep,
+          '--tag-bg': mix(accent, '#ffffff', 0.86), '--tag-text': deep, '--tag-border': mix(accent, '#ffffff', 0.6),
+          '--h1': mix(deep, '#000000', 0.55), '--h2': mix(deep, '#000000', 0.2), '--soft': mix(accent, '#ffffff', 0.9)
+        };
+        d.font = o.font || 'kufi'; d.bg = o.bg || 'white'; d.st = o.st || 'bar';
+      }
+      DESIGNS.push(d);
+      try { if (parseInt(localStorage.getItem('cvGalleryChoice'), 10) === o.id) applyDesign(d); } catch (e) {}
+      const ce = document.querySelector('.open-gallery-btn .gallery-count');
+      if (ce) ce.textContent = '(' + DESIGNS.length.toLocaleString('ar-EG') + ' دیزاین)';
+      return true;
+    }
+  };
+
   // نووسینی دوگمەکە
   const countEl = document.querySelector('.open-gallery-btn .gallery-count');
   if (countEl) countEl.textContent = '(' + DESIGNS.length.toLocaleString('ar-EG') + ' دیزاین)';
