@@ -9,6 +9,20 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="admin.css">
   <link rel="stylesheet" href="chat.css">
+  <style>
+    .sc-in{ width:100%; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); color:#fff;
+      border-radius:10px; padding:10px 12px; font:500 13px 'Vazirmatn',sans-serif; }
+    .sc-in option{ color:#000; }
+    textarea.sc-code{ direction:ltr; text-align:left; font:12.5px/1.6 ui-monospace,Menlo,Consolas,monospace; min-height:240px; resize:vertical; white-space:pre; }
+    .sc-row{ display:flex; gap:8px; margin-bottom:10px; }
+    .sc-row > *{ flex:1; min-width:0; }
+    .sc-btn{ border:none; border-radius:10px; padding:10px 14px; font:700 13px 'Noto Kufi Arabic',sans-serif; cursor:pointer; background:#FDBA12; color:#241800; }
+    .sc-btn.red{ background:#FF6B7A; color:#2a0a10; }
+    .sc-btn.dim{ background:rgba(255,255,255,.1); color:#fff; }
+    .sc-chips{ display:flex; gap:6px; flex-wrap:wrap; margin:6px 0 12px; }
+    .sc-chips button{ border:1px dashed rgba(253,186,18,.5); background:none; color:#FDBA12; border-radius:999px; padding:5px 12px; font:600 11.5px 'Vazirmatn',sans-serif; cursor:pointer; }
+    .sc-tag{ font-size:10px; padding:2px 8px; border-radius:999px; background:rgba(255,255,255,.1); margin-inline-start:6px; }
+  </style>
 </head>
 <body>
 
@@ -65,6 +79,12 @@
       <div class="loading-hint">باردەکرێت...</div>
     </div>
 
+    <!-- Extra code -->
+    <div class="section-title">کۆدی زیادە 🧩</div>
+    <div class="loading-hint" style="padding:0 0 10px;text-align:right;">لێرە بۆ هەر پەڕەیەک کۆد (CSS / JS / HTML) بنووسە، یان پەڕەی نوێ دروست بکە. هەڵەیەک ڕویدا: ?safe=1 لە کۆتایی ئەدرەسی پەڕەکە.</div>
+    <div class="user-list" id="codeList" style="margin-bottom:12px;"><div class="loading-hint">باردەکرێت...</div></div>
+    <button type="button" class="sc-btn" id="codeNewBtn" style="width:100%;margin-bottom:22px;">+ کۆدی نوێ</button>
+
     <!-- User List -->
     <div class="section-title">بەکارهێنەرانی سیستم</div>
     <div class="user-list" id="userList">
@@ -112,6 +132,49 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- Code editor -->
+  <div class="admin-overlay" id="codeOverlay">
+    <div class="admin-sheet">
+      <button class="admin-close" id="codeClose">✕</button>
+      <div class="field"><label>ناو (بۆ خۆت)</label><input class="sc-in" id="scName" placeholder="بۆ نموونە: دیزاینی نوێی CV"></div>
+      <div class="sc-row">
+        <div class="field"><label>پەڕە</label>
+          <select class="sc-in" id="scPage">
+            <option value="*">هەموو پەڕەکان</option>
+            <option value="index">چوونەژوورەوە (index)</option>
+            <option value="services">خزمەتگوزارییەکان (services)</option>
+            <option value="cv-builder">دروستکردنی CV</option>
+            <option value="games">یاری (games)</option>
+            <option value="student">خوێندکار (student)</option>
+            <option value="__new">پەڕەی نوێ...</option>
+          </select>
+        </div>
+        <div class="field"><label>جۆر</label>
+          <select class="sc-in" id="scKind">
+            <option value="js">JavaScript</option>
+            <option value="css">CSS</option>
+            <option value="html">HTML</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" id="scSlugWrap" hidden><label>ناوی پەڕەی نوێ (ئینگلیزی، بێ بۆشایی)</label><input class="sc-in" id="scSlug" dir="ltr" placeholder="offers"></div>
+      <div class="field" id="scTargetWrap" hidden><label>شوێنی HTML (CSS selector، بەتاڵ = کۆتایی پەڕە)</label><input class="sc-in" id="scTarget" dir="ltr" placeholder="#cardsGrid"></div>
+      <div class="sc-chips" id="scSamples">
+        <button type="button" data-s="design">نموونە: دیزاینی CV</button>
+        <button type="button" data-s="card">نموونە: کارتی نوێ</button>
+        <button type="button" data-s="page">نموونە: پەڕەی نوێ</button>
+        <button type="button" data-s="css">نموونە: CSS</button>
+      </div>
+      <div class="field"><label>کۆد</label><textarea class="sc-in sc-code" id="scCode" spellcheck="false" placeholder="کۆدەکە لێرە بلکێنە..."></textarea></div>
+      <label style="display:flex;gap:8px;align-items:center;margin:4px 0 14px;font-size:13px;"><input type="checkbox" id="scEnabled" checked> چالاک بێت</label>
+      <div class="loading-hint" id="scLink" style="padding:0 0 10px;text-align:right;" dir="ltr" hidden></div>
+      <div class="sc-row">
+        <button type="button" class="sc-btn" id="scSave">پاشەکەوتکردن</button>
+        <button type="button" class="sc-btn red" id="scDelete" hidden>سڕینەوە</button>
+      </div>
     </div>
   </div>
 
