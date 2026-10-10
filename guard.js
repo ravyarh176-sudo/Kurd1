@@ -13,7 +13,9 @@
     console.warn('Supabase config missing — guard.js cannot verify the session.');
     return;
   }
-  const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+  const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true }
+  });
   window.kurdtechSupabase = supabase;
 
   // full-screen blocking overlay, shown until we know the user is OK
@@ -29,12 +31,12 @@
     <style>@keyframes guardSpin{to{transform:rotate(360deg)}}</style>`;
   document.documentElement.appendChild(overlay);
 
-  function showBanScreen(reason) {
+  function showBanScreen(reason, title) {
     overlay.innerHTML = `
       <div style="width:56px;height:56px;border-radius:50%;background:rgba(206,17,38,.15);display:flex;align-items:center;justify-content:center;">
         <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#EF4444" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"></line></svg>
       </div>
-      <div style="font-family:'Noto Kufi Arabic', sans-serif; font-weight:700; font-size:16px;">تۆ لەلایەن سەرۆکی وێبسایتەوە دەرکراویت</div>
+      <div style="font-family:'Noto Kufi Arabic', sans-serif; font-weight:700; font-size:16px;">${title || 'تۆ لەلایەن سەرۆکی وێبسایتەوە دەرکراویت'}</div>
       ${reason ? `<div style="color:rgba(255,255,255,.65); max-width:320px; line-height:1.8;">هۆکار: ${reason}</div>` : ''}
       <a href="index.html" style="margin-top:6px; background:#FDBA12; color:#241800; font-weight:700; padding:10px 22px; border-radius:10px; text-decoration:none;">گەڕانەوە</a>
     `;
@@ -62,6 +64,16 @@
         .eq('id', session.user.id)
         .single();
       profile = retry.data;
+    }
+
+    // ---- قوفڵی ئامێر: ئامێری بلۆککراو یان بەستراو بە ئەکاونتێکی تر ----
+    if (window.KurdDevice) {
+      const st = await window.KurdDevice.check(supabase);
+      if (window.KurdDevice.isBad(st) && st !== 'banned') {
+        await supabase.auth.signOut();
+        showBanScreen(window.KurdDevice.message(st), 'ڕێگەت پێنادرێت بچیتە ژوورەوە');
+        return;
+      }
     }
 
     if (profile && profile.banned) {
