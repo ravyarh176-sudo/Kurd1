@@ -53,7 +53,7 @@
     });
   }
 
-  // ===== ٥٠ دیزاینی نوێ (ژمارە ١٠١ تا ١٥٠) — ئەوانی کۆن وەک خۆیان ماونەتەوە =====
+  // ===== ٥٠ دیزاینی نوێ (ژمارە ١٠١ تا ١٥٠) =====
   const PAL2 = [
     ['#2563EB', '#0B2A5B'], ['#D4A017', '#0B1F3A'], ['#14B8A6', '#0F4C5C'], ['#F97316', '#7C2D12'],
     ['#D946EF', '#4C1D95'], ['#22C55E', '#14532D'], ['#EF4444', '#7F1D1D'], ['#F43F5E', '#881337'],
@@ -61,7 +61,6 @@
     ['#10B981', '#064E3B'], ['#6366F1', '#312E81'], ['#84CC16', '#365314'], ['#C08A3E', '#4A2C0A'],
     ['#64748B', '#0F172A'], ['#FF6B6B', '#6B1D1D'], ['#8B5CF6', '#2E1065'], ['#2DD4BF', '#134E4A']
   ];
-  // شێوە : جۆری سەرەوە / لای : شێوەی وێنە
   const ND_SPEC = [
     'sidebar:solid:round', 'sidebar:grad:round', 'sidebar:light:round', 'classic:solid:round', 'classic:grad:soft',
     'classic:light:round', 'minimal:solid:round', 'geometric:solid:round', 'overlap:solid:round', 'sidebar:solid:sq',
@@ -96,7 +95,8 @@
     if (d.vars) {
       el.setAttribute('data-gal', '1');
       el.dataset.font = d.font; el.dataset.bg = d.bg; el.dataset.st = d.st;
-      if (d.hd) { el.dataset.hd = d.hd; el.dataset.photo = d.photo; }
+      if (d.hd) el.dataset.hd = d.hd;
+      if (d.photo) el.dataset.photo = d.photo;
       Object.keys(d.vars).forEach(k => el.style.setProperty(k, d.vars[k]));
     }
   }
@@ -120,7 +120,6 @@
     designs: DESIGNS,
     addDesign(o) {
       if (!o) return false;
-      // ژمارە خۆکار: ئەگەر id نەنووسرابێت، 'auto' بێت، یان پێشتر بەکارهاتبێت، دەبێتە ژمارەی دوای دوایین دیزاین
       let id = parseInt(o.id, 10);
       if (!id || DESIGNS.some(x => x.id === id)) id = Math.max.apply(null, DESIGNS.map(x => x.id)) + 1;
       const shape = SHAPES.includes(o.shape) ? o.shape : 'classic';
@@ -143,8 +142,7 @@
     }
   };
 
-
-  // ===== دیزاینی تایبەتی «Aurora» (١٦٠) =====
+  // ===== دیزاینی تایبەتی «Aurora» =====
   window.KurdCV.addDesign({ shape: 'minimal', tpl: 'aurora-1', hd: 'light', photo: 'round',
     accent: '#14B8A6', deep: '#0F4C5C', font: 'kufi', bg: 'white', st: 'bar' });
 
@@ -186,6 +184,7 @@
         const card = en.target;
         io.unobserve(card);
         const d = DESIGNS[parseInt(card.dataset.idx, 10)];
+        if (!d) return;
         const thumb = card.querySelector('.gal-thumb');
         thumb.innerHTML = '';
         thumb.appendChild(cloneForThumb(d));
@@ -212,7 +211,10 @@
   }
 
   function applyFilter(f) {
-    grid.querySelectorAll('.gal-card').forEach(c => { c.hidden = !(f === 'all' || c.dataset.shape === f || (f === 'new' && c.dataset.grp === 'new')); });
+    f = f || 'all';
+    grid.querySelectorAll('.gal-card').forEach(c => {
+      c.hidden = !(f === 'all' || c.dataset.shape === f || (f === 'new' && c.dataset.grp === 'new'));
+    });
   }
   filters.addEventListener('click', (e) => {
     const b = e.target.closest('.gal-chip'); if (!b) return;
@@ -223,13 +225,18 @@
   });
 
   function fitScale() {
+    if (!galBody || galBody.offsetParent === null) return;
     const t = grid.querySelector('.gal-card:not([hidden]) .gal-thumb');
     if (t && t.clientWidth) grid.style.setProperty('--s', (t.clientWidth / 560).toFixed(4));
   }
   window.addEventListener('resize', fitScale);
 
+  let galleryBuilt = false;
   const openBtn = $('openGalleryBtn');
-  if (openBtn) openBtn.addEventListener('click', () => { buildGrid(); requestAnimationFrame(fitScale); });
+  if (openBtn) openBtn.addEventListener('click', () => {
+    if (!galleryBuilt) { buildGrid(); galleryBuilt = true; }
+    requestAnimationFrame(fitScale);
+  });
 
   /* ------------------------------------------------------------------ *
    * 2) بەشی تایبەت بە خۆت — بە چەند لاین
@@ -243,7 +250,9 @@
     if (!customTarget || !customList) return;
     customTarget.innerHTML = '';
     customList.querySelectorAll('.repeat-item').forEach(block => {
-      const title = block.querySelector('.u-title').value.trim();
+      const titleEl = block.querySelector('.u-title');
+      if (!titleEl) return;
+      const title = titleEl.value.trim();
       const lines = Array.from(block.querySelectorAll('.cx-line input')).map(i => i.value.trim()).filter(Boolean);
       if (!lines.length) return;
       const sec = document.createElement('div');
@@ -272,7 +281,8 @@
     if (focus) input.focus();
   }
 
-  function addCustomSection() {
+  function addCustomSection(e) {
+    if (e) { e.preventDefault(); e.stopImmediatePropagation(); }
     if (!customList) return;
     const block = document.createElement('div');
     block.className = 'repeat-item';
@@ -289,17 +299,37 @@
     addLine(block, false);
     block.querySelector('.u-title').focus();
   }
+
+  // ⚠️ تەنها ئەگەر cv-builder.js خۆی handle نەکردبێت، ئێمە دەیگرینە دەست
   const addCustomBtn = $('addCustomBtn');
-  if (addCustomBtn) addCustomBtn.addEventListener('click', addCustomSection);
+  if (addCustomBtn && !addCustomBtn.dataset.bound) {
+    addCustomBtn.dataset.bound = '1';
+    addCustomBtn.addEventListener('click', addCustomSection);
+  }
 
   /* ------------------------------------------------------------------ *
    * 3) دوگمەی چاو — پیشاندانی CV + داگرتن
    * ------------------------------------------------------------------ */
-  const actions = document.querySelector('.topbar-actions');
+  // 🧹 سڕینەوەی چاوە کۆنەکان (پێش دروستکردنی نوێ)
+  const topbar = document.querySelector('.topbar-actions');
+  if (topbar) {
+    topbar.querySelectorAll('button, a').forEach(btn => {
+      if (btn.id === 'viewCvBtn') return;
+      const html = (btn.innerHTML || '').toLowerCase();
+      const cls = (btn.className || '').toLowerCase();
+      const id = (btn.id || '').toLowerCase();
+      // چاوەکان هەمیشە 👁 یان "eye" یان "view" یان "چاو"ـیان تێدایە
+      if (/👁|eye|view|چاو/.test(html) || /eye|view/.test(cls) || /eye|view/.test(id)) {
+        console.log('🗑️ چاوێکی کۆن سڕایەوە:', btn);
+        btn.remove();
+      }
+    });
+  }
+
   const eye = document.createElement('button');
   eye.type = 'button'; eye.className = 'btn-eye'; eye.id = 'viewCvBtn'; eye.setAttribute('aria-label', 'پیشاندانی CV');
   eye.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
-  if (actions) actions.prepend(eye);
+  if (topbar) topbar.prepend(eye);
 
   const view = document.createElement('div');
   view.className = 'view-overlay no-print';
@@ -385,7 +415,6 @@
     try { answered = localStorage.getItem('cvFeedback_' + (id || 'anon')) === '1'; } catch (e) {}
     if (s && id) {
       try {
-        // تۆمارکردنی ئەوەی ئەم کەسە CVی دروستکردووە (یەک جار)
         await s.from('cv_usage').upsert({ user_id: id }, { onConflict: 'user_id', ignoreDuplicates: true });
         if (!answered) {
           const { data } = await s.from('cv_usage').select('satisfied').eq('user_id', id).maybeSingle();
@@ -429,6 +458,5 @@
     }));
   }
 
-  // بۆ تاقیکردنەوە لە کۆنسۆڵ: window.__cvFeedbackTest()
   window.__cvFeedbackTest = showFeedback;
 })();
