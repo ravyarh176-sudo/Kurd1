@@ -273,7 +273,7 @@ button{ letter-spacing:0; }` }
 
   let codeRows = [];
   let activeCode = null;
-  const KNOWN = ['*', 'index', 'services', 'cv-builder', 'games', 'student'];
+  const KNOWN = ['*', 'index', 'services', 'cv-builder', 'games', 'student', 'admin'];
 
   async function loadCode() {
     const box = $('codeList');
