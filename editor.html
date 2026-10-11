@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, interactive-widget=resizes-content">
+  <title>ئیدیتۆری کۆد | Kurd Technology</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.css">
+  <link rel="stylesheet" href="editor.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- Top bar -->
+  <header class="ide-top">
+    <button class="ib" id="btnTree" title="فایلەکان">☰</button>
+    <a class="ib" href="admin.html" title="گەڕانەوە بۆ ئادمین">←</a>
+    <div class="ide-title"><b>Kurd Code</b><span id="curPath" dir="ltr"></span></div>
+    <div class="ide-actions">
+      <button class="ib" id="btnUndo" title="Undo">↶</button>
+      <button class="ib" id="btnRedo" title="Redo">↷</button>
+      <button class="ib" id="btnFind" title="گەڕان (Ctrl+F)">🔍</button>
+      <button class="ib" id="btnProps" title="ڕێکخستنی فایل">⚙</button>
+      <button class="ib" id="btnPreview" title="پێشبینین">▶</button>
+      <button class="ib save" id="btnSave" title="پاشەکەوت (Ctrl+S)">💾</button>
+      <button class="ib" id="btnMore" title="زیاتر">⋮</button>
+    </div>
+  </header>
+
+  <div class="ide-body">
+    <!-- Sidebar / file tree -->
+    <aside class="ide-side" id="side">
+      <div class="side-head">
+        <span>فایلەکان</span>
+        <span class="side-btns">
+          <button class="ib sm" id="btnNew" title="فایلی نوێ">＋</button>
+          <button class="ib sm" id="btnReload" title="نوێکردنەوە لە داتابەیس">⟳</button>
+        </span>
+      </div>
+      <input class="side-search" id="fileSearch" placeholder="گەڕان بە ناوی فایل..." dir="auto">
+      <div class="tree" id="tree"><div class="hint">باردەکرێت...</div></div>
+      <div class="side-foot">
+        <button class="sbtn" id="btnSafeInfo">❓ ڕێنمایی</button>
+      </div>
+    </aside>
+    <div class="side-shade" id="sideShade"></div>
+
+    <!-- Editor column -->
+    <section class="ide-main">
+      <div class="tabs" id="tabs"></div>
+      <div class="editor-wrap" id="editorWrap">
+        <div class="empty" id="emptyState">
+          <div class="big">{ }</div>
+          <p>فایلێک هەڵبژێرە یان فایلی نوێ دروست بکە</p>
+          <button class="sbtn gold" id="btnNew2">＋ فایلی نوێ</button>
+        </div>
+        <textarea id="ta"></textarea>
+      </div>
+      <div class="status" id="status">
+        <span id="stPos">Ln 1, Col 1</span>
+        <span id="stKind"></span>
+        <span id="stState"></span>
+      </div>
+      <!-- extra keys (mobile, like Acode) -->
+      <div class="xkeys" id="xkeys">
+        <button data-k="tab">Tab</button><button data-k="undo">↶</button><button data-k="redo">↷</button>
+        <button data-i="{">{</button><button data-i="}">}</button>
+        <button data-i="(">(</button><button data-i=")">)</button>
+        <button data-i="[">[</button><button data-i="]">]</button>
+        <button data-i="<">&lt;</button><button data-i=">">&gt;</button>
+        <button data-i="/">/</button><button data-i=";">;</button>
+        <button data-i="=">=</button><button data-i="&quot;">"</button>
+        <button data-i="'">'</button><button data-i="`">`</button>
+        <button data-i="$">$</button><button data-i=":">:</button>
+        <button data-i="!">!</button><button data-i="&amp;">&amp;</button>
+        <button data-i="|">|</button><button data-k="hint">⌨ تەواوکردن</button>
+        <button data-k="comment">//</button>
+      </div>
+    </section>
+
+    <!-- Preview -->
+    <section class="ide-prev" id="prev">
+      <div class="prev-head">
+        <b>پێشبینین</b>
+        <span class="prev-url" id="prevUrl" dir="ltr"></span>
+        <label class="live"><input type="checkbox" id="liveChk" checked> زیندوو</label>
+        <button class="ib sm" id="btnPrevReload" title="نوێکردنەوە">⟳</button>
+        <button class="ib sm" id="btnPrevClose" title="داخستن">✕</button>
+      </div>
+      <iframe id="frame" title="preview"></iframe>
+      <div class="console" id="console">
+        <div class="console-head"><span>Console <em id="conCount"></em></span><button class="ib sm" id="conClear">🗑</button></div>
+        <div class="console-body" id="conBody" dir="ltr"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Props sheet -->
+  <div class="sheet-wrap" id="propsWrap">
+    <div class="sheet" dir="rtl">
+      <button class="sheet-x" data-close="propsWrap">✕</button>
+      <h3>ڕێکخستنی فایل</h3>
+      <label>ناو<input class="fld" id="pName" dir="auto"></label>
+      <div class="two">
+        <label>پەڕە
+          <select class="fld" id="pPage"></select>
+        </label>
+        <label>جۆر
+          <select class="fld" id="pKind">
+            <option value="js">JavaScript</option>
+            <option value="css">CSS</option>
+            <option value="html">HTML</option>
+          </select>
+        </label>
+      </div>
+      <label id="pSlugWrap" hidden>ناوی پەڕەی نوێ (ئینگلیزی، بێ بۆشایی)<input class="fld" id="pSlug" dir="ltr" placeholder="offers"></label>
+      <label id="pTargetWrap" hidden>شوێنی HTML (CSS selector، بەتاڵ = کۆتایی پەڕە)<input class="fld" id="pTarget" dir="ltr" placeholder="#cardsGrid"></label>
+      <div class="two">
+        <label>ڕیزبەندی جێبەجێکردن<input class="fld" id="pOrder" type="number" dir="ltr"></label>
+        <label class="chk"><input type="checkbox" id="pEnabled"> چالاک بێت (بۆ هەمووان)</label>
+      </div>
+      <div class="hint" id="pLink" dir="ltr"></div>
+      <div class="two">
+        <button class="sbtn gold" id="pOk">باشە</button>
+        <button class="sbtn red" id="pDelete">سڕینەوە</button>
+      </div>
+      <button class="sbtn" id="pDup" style="width:100%;margin-top:8px">⧉ کۆپیکردنی فایل</button>
+    </div>
+  </div>
+
+  <!-- New file sheet -->
+  <div class="sheet-wrap" id="newWrap">
+    <div class="sheet" dir="rtl">
+      <button class="sheet-x" data-close="newWrap">✕</button>
+      <h3>فایلی نوێ</h3>
+      <div class="tpl-list" id="tplList"></div>
+    </div>
+  </div>
+
+  <!-- More menu -->
+  <div class="sheet-wrap" id="moreWrap">
+    <div class="sheet" dir="rtl">
+      <button class="sheet-x" data-close="moreWrap">✕</button>
+      <h3>زیاتر</h3>
+      <button class="sbtn menu" id="mSaveAll">💾 پاشەکەوتکردنی هەموو فایلەکان</button>
+      <button class="sbtn menu" id="mWrap">↩ شکاندنی دێڕی درێژ (Wrap)</button>
+      <button class="sbtn menu" id="mFontUp">A+ فۆنتی گەورەتر</button>
+      <button class="sbtn menu" id="mFontDown">A− فۆنتی بچووکتر</button>
+      <button class="sbtn menu" id="mFoldAll">▾ پێچانەوەی هەموو بلۆکەکان</button>
+      <button class="sbtn menu" id="mUnfoldAll">▴ کردنەوەی هەموو بلۆکەکان</button>
+      <button class="sbtn menu" id="mExport">⬇ بەکئەپ (دابەزاندنی هەموو کۆدەکان JSON)</button>
+      <button class="sbtn menu" id="mImport">⬆ هێنانەوەی بەکئەپ</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+  </div>
+
+  <!-- Help -->
+  <div class="sheet-wrap" id="helpWrap">
+    <div class="sheet" dir="rtl">
+      <button class="sheet-x" data-close="helpWrap">✕</button>
+      <h3>ڕێنمایی</h3>
+      <div class="help">
+        <p><b>🌍 هەموو کەس دەیبینێت:</b> هەر کۆدێک «چالاک» بێت و پاشەکەوت بکرێت، لە هەمان ساتدا بۆ هەموو بەکارهێنەرانی سایتەکە جێبەجێ دەبێت. ئەم ئیدیتۆرە تەنها بۆ <b>owner</b>ـە.</p>
+        <p><b>📁 فایل = پەڕە:</b> هەر فایلێک بۆ یەک پەڕەیە (یان «هەموو پەڕەکان»). جۆر: <code>js</code> کۆدی کار، <code>css</code> دیزاین، <code>html</code> بەش/ناوەڕۆکی نوێ.</p>
+        <p><b>⚙ کۆدی JS</b> ئەم گۆڕاوانەی هەیە: <code>sb</code> (Supabase)، <code>user</code>، <code>profile</code>، <code>page</code>.</p>
+        <p><b>➕ پەڕەی نوێ:</b> لە ڕێکخستنی فایل «پەڕەی نوێ» هەڵبژێرە و ناوێک بنووسە؛ دەبێتە <code dir="ltr">custom.html?p=ناو</code>.</p>
+        <p><b>🛠 بەشی ئادمینی نوێ:</b> فایلێک بۆ پەڕەی <code>admin</code> دروست بکە (نموونەی «بەشی ئادمینی نوێ»).</p>
+        <p><b>▶ پێشبینین:</b> کۆدە پاشەکەوتنەکراوەکانیش لە پێشبینینەکە دەبینرێن، تەنها لای خۆت.</p>
+        <p><b>🆘 ئەگەر سایتەکە تێکچوو:</b> <code dir="ltr">?safe=1</code> لە کۆتایی ئەدرەسی پەڕەکە زیاد بکە، کۆدە زیادەکان ناچالاک دەبن. ئەم ئیدیتۆرە هەرگیز کۆدی زیادە بار ناکات، بۆیە هەمیشە دەتوانی چاکی بکەیتەوە.</p>
+        <p><b>⌨ کورتەکان:</b> <code>Ctrl+S</code> پاشەکەوت، <code>Ctrl+F</code> گەڕان، <code>Ctrl+/</code> کۆمێنت، <code>Ctrl+Space</code> تەواوکردن، <code>Ctrl+Enter</code> پێشبینین.</p>
+        <p><b>🔐 ئاگاداری:</b> کۆدی چالاک لە ڕێگەی ئینتەرنێتەوە دەخوێندرێتەوە، بۆیە هیچ پاسۆرد یان کلیلی نهێنی تێیدا مەنووسە.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closetag.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/search.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/jump-to-line.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/javascript-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/css-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/xml-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/html-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/brace-fold.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/xml-fold.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/comment-fold.min.js"></script>
+<script src="device.js"></script>
+<script src="guard.js"></script>
+<script src="editor.js"></script>
+</body>
+</html>
