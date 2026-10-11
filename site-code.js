@@ -5,7 +5,7 @@
   if (/[?&]safe=1/.test(location.search)) return;
 
   let page = (location.pathname.split('/').pop() || 'index').replace(/\.html$/i, '').toLowerCase() || 'index';
-  if (page === 'admin') return; // پانێڵی ئەدمین هەرگیز کۆدی زیادە بار ناکات (دڵنیایی)
+  if (page === 'editor') return; // ئیدیتۆری کۆد هەرگیز کۆدی زیادە بار ناکات (دڵنیایی، تا هەمیشە بتوانی چاکی بکەیتەوە)
   if (page === 'custom') {
     const p = new URLSearchParams(location.search).get('p') || '';
     page = 'custom-' + p.toLowerCase();
@@ -17,6 +17,20 @@
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
   });
   window.KurdSite = { page };
+
+  // دۆخی پێشبینین: ئیدیتۆر کۆدە پاشەکەوتنەکراوەکان لە localStorage دەنێرێت (تەنها لەو ئامێرەی خۆت)
+  const PREVIEW = /[?&]preview=1/.test(location.search) && window.parent !== window;
+  if (PREVIEW) {
+    const send = (level, args) => {
+      try { window.parent.postMessage({ kurdConsole: true, level, text: args.map(a => { try { return typeof a === 'string' ? a : (a && a.stack) || JSON.stringify(a); } catch (e) { return String(a); } }).join(' ') }, location.origin); } catch (e) {}
+    };
+    ['log', 'warn', 'error', 'info'].forEach(l => {
+      const o = console[l].bind(console);
+      console[l] = (...a) => { send(l, a); o(...a); };
+    });
+    window.addEventListener('error', e => send('error', [(e.message || 'Error') + (e.lineno ? ' (line ' + e.lineno + ')' : '')]));
+    window.addEventListener('unhandledrejection', e => send('error', ['Promise: ' + (e.reason && e.reason.message || e.reason)]));
+  }
 
   const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 
@@ -66,7 +80,13 @@
 
   (async function () {
     let rows = [];
-    try {
+    if (PREVIEW) {
+      try {
+        const d = JSON.parse(localStorage.getItem('kurd_code_preview') || '{}');
+        rows = (d.rows || []).filter(r => r.enabled !== false && (r.page === '*' || (r.page || '').toLowerCase() === page))
+          .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+      } catch (e) { console.warn('[site-code] preview:', e.message); }
+    } else try {
       const { data, error } = await reader.from('site_code')
         .select('id,name,page,kind,target,code,sort_order')
         .eq('enabled', true)
