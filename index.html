@@ -10,6 +10,21 @@
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
+<script>
+/* چوونەژوورەوەی خۆکار: ئەگەر پێشتر چووبیتە ژوورەوە، پێش ئەوەی پەڕەکە بکێشرێت یەکسەر دەچیتە services */
+(function(){try{
+  if(/[?&](code|error|error_description)=|access_token=/.test(location.search+location.hash)) return;
+  var last=+(sessionStorage.getItem('kf_autogo')||0); if(Date.now()-last<8000) return;
+  for(var k in localStorage){ if(!/^sb-.+-auth-token$/.test(k)) continue;
+    var v=JSON.parse(localStorage.getItem(k)||'null'), t=v&&(v.currentSession||v);
+    if(t&&t.access_token&&t.user&&t.expires_at*1000>Date.now()+30000){
+      sessionStorage.setItem('kf_autogo',String(Date.now()));
+      document.documentElement.style.visibility='hidden';
+      setTimeout(function(){document.documentElement.style.visibility='';},4000);
+      location.replace('services.html'); return; } }
+}catch(e){}})();
+</script>
+
 </head>
 <body>
 
