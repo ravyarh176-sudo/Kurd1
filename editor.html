@@ -132,6 +132,23 @@
     </div>
   </div>
 
+  <!-- Site file sheet -->
+  <div class="sheet-wrap" id="siteWrap">
+    <div class="sheet" dir="rtl">
+      <button class="sheet-x" data-close="siteWrap">✕</button>
+      <h3>فایلی سایت</h3>
+      <div class="hint" id="sPath" dir="ltr"></div>
+      <div class="hint" id="sState"></div>
+      <div class="two">
+        <a class="sbtn" id="sOpen" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">↗ کردنەوە</a>
+        <button class="sbtn" id="sCopyOrig">⤓ هێنانی ئۆریجینال</button>
+      </div>
+      <button class="sbtn red" id="sRestore" style="width:100%;margin-top:8px">↺ گەڕاندنەوە</button>
+      <h3 style="margin-top:16px;font-size:14px">مێژوو (٣٠ وەشانی کۆتایی)</h3>
+      <div class="tpl-list" id="sHist"></div>
+    </div>
+  </div>
+
   <!-- New file sheet -->
   <div class="sheet-wrap" id="newWrap">
     <div class="sheet" dir="rtl">
@@ -155,6 +172,8 @@
       <button class="sbtn menu" id="mExport">⬇ بەکئەپ (دابەزاندنی هەموو کۆدەکان JSON)</button>
       <button class="sbtn menu" id="mImport">⬆ هێنانەوەی بەکئەپ</button>
       <input type="file" id="importFile" accept="application/json,.json" hidden>
+      <button class="sbtn menu" id="mUpload">📤 بارکردنی فایل بۆ سایت (وێنە، فۆنت، JS، CSS...)</button>
+      <input type="file" id="uploadFile" hidden>
     </div>
   </div>
 
@@ -165,6 +184,8 @@
       <h3>ڕێنمایی</h3>
       <div class="help">
         <p><b>🌍 هەموو کەس دەیبینێت:</b> هەر کۆدێک «چالاک» بێت و پاشەکەوت بکرێت، لە هەمان ساتدا بۆ هەموو بەکارهێنەرانی سایتەکە جێبەجێ دەبێت. ئەم ئیدیتۆرە تەنها بۆ <b>owner</b>ـە.</p>
+        <p><b>📂 فایلەکانی سایت:</b> لە لیستی فایلەکان بەشی «فایلەکانی سایت (GitHub)» هەموو فایلەکانی سایتەکەیە (services.html، admin.js، style.css...). هەر فایلێک بکەرەوە، بیگۆڕە و 💾 بکە: بۆ هەمووان جێگەی وەشانی GitHub دەگرێتەوە، بێ ئەوەی بچیتە GitHub. ⚙ = گەڕاندنەوە بۆ ئۆریجینال و مێژووی ٣٠ وەشان. ＋ ← «فایلی سایت» = پەڕە/فایلی تەواو نوێ.</p>
+        <p><b>🛡 پارێزراوەکان:</b> <code dir="ltr">editor.*</code>، <code dir="ltr">sw.js</code>، <code dir="ltr">site-code.js</code>، <code dir="ltr">config.js</code> نادرێنە جێگە، تا ئیدیتۆر هەمیشە ساغ بێت. ئەگەر پەڕەیەک تێکچوو: <code dir="ltr">?safe=1</code> وەشانی GitHub پیشان دەدات. ئەگەر هەموو شتێک تێکچوو: <code dir="ltr">?nosw=1</code>.</p>
         <p><b>📁 فایل = پەڕە:</b> هەر فایلێک بۆ یەک پەڕەیە (یان «هەموو پەڕەکان»). جۆر: <code>js</code> کۆدی کار، <code>css</code> دیزاین، <code>html</code> بەش/ناوەڕۆکی نوێ.</p>
         <p><b>⚙ کۆدی JS</b> ئەم گۆڕاوانەی هەیە: <code>sb</code> (Supabase)، <code>user</code>، <code>profile</code>، <code>page</code>.</p>
         <p><b>➕ پەڕەی نوێ:</b> لە ڕێکخستنی فایل «پەڕەی نوێ» هەڵبژێرە و ناوێک بنووسە؛ دەبێتە <code dir="ltr">custom.html?p=ناو</code>.</p>
@@ -209,5 +230,6 @@
 <script src="device.js"></script>
 <script src="guard.js"></script>
 <script src="editor.js"></script>
+<script src="site-code.js"></script>
 </body>
 </html>
