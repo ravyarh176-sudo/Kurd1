@@ -11,7 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script>
-/* چوونەژوورەوەی خۆکار: ئەگەر پێشتر چووبیتە ژوورەوە، پێش ئەوەی پەڕەکە بکێشرێت یەکسەر دەچیتە services */
+/* چوونەژوورەوەی خۆکار: ئەگەر پێشتر چووبیتە ژوورەوە، پەڕەی چوونەژوورەوە نیشان نادرێت؛ تەنها «چاوەڕێبە» دەردەکەوێت و یەکسەر دەچێتە services */
 (function(){try{
   if(/[?&](code|error|error_description)=|access_token=/.test(location.search+location.hash)) return;
   var last=+(sessionStorage.getItem('kf_autogo')||0); if(Date.now()-last<8000) return;
@@ -19,8 +19,11 @@
     var v=JSON.parse(localStorage.getItem(k)||'null'), t=v&&(v.currentSession||v);
     if(t&&t.access_token&&t.user&&t.expires_at*1000>Date.now()+30000){
       sessionStorage.setItem('kf_autogo',String(Date.now()));
-      document.documentElement.style.visibility='hidden';
-      setTimeout(function(){document.documentElement.style.visibility='';},4000);
+      var o=document.createElement('div');
+      o.id='kfWaitOv';
+      o.style.cssText='position:fixed;inset:0;z-index:99999;background:#0A0E17;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff;font-family:Vazirmatn,sans-serif;font-size:14px';
+      o.innerHTML='<div style="width:40px;height:40px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:#FDBA12;animation:kfSpin .8s linear infinite"></div><div>چاوەڕێبە...</div><style>@keyframes kfSpin{to{transform:rotate(360deg)}}</style>';
+      document.documentElement.appendChild(o);
       location.replace('services.html'); return; } }
 }catch(e){}})();
 </script>
@@ -51,7 +54,13 @@
       <div class="sun-glow"></div>
 
       <!-- ======= STEP 1: welcome + Google sign-in ======= -->
-      <div class="auth-step" id="stepWelcome">
+      <!-- ======= چاوەڕێبە: تا دڵنیا دەبین بەکارهێنەر چووەتە ژوورەوە ======= -->
+      <div class="auth-step welcome-flash" id="stepWait">
+        <div class="wait-spin"></div>
+        <div class="sub">چاوەڕێبە...</div>
+      </div>
+
+      <div class="auth-step" id="stepWelcome" hidden>
         <div class="card-header">
           <div class="badge">
             <svg viewBox="0 0 24 24" fill="#241800"><path d="M12 2l1.9 5.8H20l-4.9 3.6 1.9 5.8L12 13.6l-5 3.6 1.9-5.8L4 7.8h6.1L12 2z"/></svg>
