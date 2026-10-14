@@ -155,3 +155,9 @@ body{
   cursor:pointer;
 }
 .btn-ban.is-banned{ background: linear-gradient(135deg, #4ADE80, #0E4A2C); }
+
+/* گەڕان بە ئایدی + ئایدی */
+.user-search{width:100%;box-sizing:border-box;margin:0 0 12px;padding:13px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:14px;font-family:inherit}
+.user-search::placeholder{color:rgba(255,255,255,.4)}
+.ud-code{font-size:28px;font-weight:800;letter-spacing:2px;color:#FDBA12;direction:ltr;margin:6px 0 16px}
+.uc-sub.kcode{direction:ltr;text-align:right;color:#FDBA12}
