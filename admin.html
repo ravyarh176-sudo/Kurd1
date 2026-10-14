@@ -42,30 +42,6 @@
   <!-- Main Wrap -->
   <main class="wrap">
 
-    <!-- Stats -->
-    <div class="stats-row">
-      <div class="stat-box">
-        <b id="statTotal">0</b>
-        <span>سەرجەم بەکارهێنەران</span>
-      </div>
-      <div class="stat-box">
-        <b id="statOwners" style="color: #4ADE80;">0</b>
-        <span>خاوەنەکان</span>
-      </div>
-      <div class="stat-box">
-        <b id="statBanned" style="color: #FF6B7A;">0</b>
-        <span>دەرکراوەکان</span>
-      </div>
-    </div>
-
-    <!-- CV stats -->
-    <div class="section-title">ئامارەکانی CV</div>
-    <div class="stats-row">
-      <div class="stat-box"><b id="statCvTotal">0</b><span>CVیان دروستکردووە</span></div>
-      <div class="stat-box"><b id="statCvYes" style="color:#4ADE80;">0</b><span>ڕازین 👍</span></div>
-      <div class="stat-box"><b id="statCvNo" style="color:#FF6B7A;">0</b><span>ڕازی نین 👎</span></div>
-    </div>
-    <div class="loading-hint" id="statCvPct" style="margin-bottom:18px;"></div>
 
     <!-- Lock sections -->
     <div class="section-title">قوفڵکردنی بەشەکان 🔒</div>
@@ -88,6 +64,7 @@
 
     <!-- User List -->
     <div class="section-title">بەکارهێنەرانی سیستم</div>
+    <input type="search" id="userSearch" class="user-search" placeholder="🔎 گەڕان بە ئایدی (KT-123456) یان ناو..." autocomplete="off">
     <div class="user-list" id="userList">
       <div class="loading-hint">باردەکرێت...</div>
     </div>
@@ -109,11 +86,21 @@
       <div class="admin-tabs">
         <button class="admin-tab active" data-tab="chat">گفتوگۆ و دەنگ</button>
         <button class="admin-tab" data-tab="manage">بەڕێوەبردن و دۆخ</button>
+        <button class="admin-tab" data-tab="uid">ئایدی</button>
       </div>
 
       <!-- پەڕەی گفتوگۆ (Chat & Voice) -->
       <div id="tabChat" class="admin-tab-panel">
         <div id="userChatMount" style="min-height: 280px;"></div>
+      </div>
+
+      <!-- پەڕەی ئایدی -->
+      <div id="tabUid" class="admin-tab-panel" hidden>
+        <div class="manage-block" style="text-align:center;">
+          <div style="font-size:13px;opacity:.65;">ئایدیی تایبەتی ئەم بەکارهێنەرە</div>
+          <div id="udCode" class="ud-code">—</div>
+          <button type="button" class="sc-btn" id="udCodeCopy" style="width:100%;padding:13px;">کۆپی کردنی ئایدی</button>
+        </div>
       </div>
 
       <!-- پەڕەی بەڕێوەبردن (Ban) -->
