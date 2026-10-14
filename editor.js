@@ -10,13 +10,26 @@ window.addEventListener('kurdtech:ready', async () => {
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const EXT = { js: '.js', css: '.css', html: '.html' };
-  const MODE = { js: 'javascript', css: 'css', html: 'htmlmixed' };
+  const MODE = { js: 'javascript', css: 'css', html: 'htmlmixed', json: { name: 'javascript', json: true }, xml: 'xml', txt: 'text/plain' };
+  const KIND_BY_EXT = { html: 'html', htm: 'html', js: 'js', mjs: 'js', css: 'css', json: 'json', svg: 'xml', xml: 'xml' };
+  const extOf = (p) => (p.split('.').pop() || '').toLowerCase();
+  const kindOfPath = (p) => KIND_BY_EXT[extOf(p)] || 'txt';
+  const SITE = '__site';
+  // فایلەکانی GitHub کە دەکرێت لێرە بگۆڕدرێن (فایلی نوێش دەکرێت دروست بکرێت). ئەوانەی PROTECTED نین.
+  const MANIFEST = [
+    'index.html', 'services.html', 'admin.html', 'cv-builder.html', 'games.html', 'student.html', 'custom.html',
+    'style.css', 'services.css', 'admin.css', 'cv-builder.css', 'cv-extras.css', 'games.css', 'student.css', 'chat.css', 'profile.css',
+    'auth.js', 'guard.js', 'device.js', 'theme.js', 'services.js', 'app-auth-ui.js', 'profile.js', 'chat.js', 'admin.js', 'admin-photo-editor.js',
+    'cv-builder.js', 'cv-extras.js', 'games-render.js', 'student.js', 'sections-icons.js', 'sections-render.js'
+  ];
+  const PROTECTED = ['sw.js', 'config.js', 'site-code.js', 'editor.html', 'editor.js', 'editor.css'];
+  const TEXT_EXT = ['html', 'htm', 'js', 'mjs', 'css', 'json', 'svg', 'xml', 'txt', 'md', 'csv'];
   const KNOWN = ['*', 'index', 'services', 'cv-builder', 'games', 'student', 'admin'];
   const PAGE_LABEL = {
     '*': '🌐 هەموو پەڕەکان', index: '🔑 index (چوونەژوورەوە)', services: '🧩 services', 'cv-builder': '📄 cv-builder',
     games: '🎮 games', student: '🎓 student', admin: '🛠 admin (پانێڵی ئادمین)'
   };
-  const pageLabel = (p) => PAGE_LABEL[p] || (p.startsWith('custom-') ? '📄 پەڕەی نوێ: ' + p.slice(7) : '📁 ' + p);
+  const pageLabel = (p) => p === SITE ? '📂 فایلەکانی سایت (GitHub)' : PAGE_LABEL[p] || (p.startsWith('custom-') ? '📄 پەڕەی نوێ: ' + p.slice(7) : '📁 ' + p);
 
   // ---------- نموونەکان ----------
   const TEMPLATES = [
@@ -91,7 +104,9 @@ else console.log('بەکارهێنەران:', data);
   let open = [];           // تابە کراوەکان (key)
   let activeKey = null;
   let tmp = 0;
-  const closedGroups = new Set();
+  const closedGroups = new Set([SITE]);
+  let overrides = new Map(); // path -> row لە site_files
+  let siteOk = true;
 
   const cm = CodeMirror.fromTextArea($('ta'), {
     theme: 'material-darker', lineNumbers: true, lineWrapping: false, indentUnit: 2, tabSize: 2, indentWithTabs: false,
@@ -116,8 +131,8 @@ else console.log('بەکارهێنەران:', data);
   const byKey = (k) => files.find(f => f.key === k);
   const cur = () => byKey(activeKey);
   const metaOf = (f) => JSON.stringify([f.name, f.page, f.kind, f.target || '', !!f.enabled, +f.sort_order || 0]);
-  const isDirty = (f) => !f.id || f.doc.getValue() !== f.saved.code || metaOf(f) !== f.saved.meta;
-  const fileName = (f) => f.name + EXT[f.kind];
+  const isDirty = (f) => f.site ? (f.loaded && !f.busy && !f.readonly && (f.fresh || f.doc.getValue() !== f.saved.code)) : (!f.id || f.doc.getValue() !== f.saved.code || metaOf(f) !== f.saved.meta);
+  const fileName = (f) => f.site ? f.path : f.name + EXT[f.kind];
 
   function makeFile(row) {
     const f = {
@@ -132,6 +147,39 @@ else console.log('بەکارهێنەران:', data);
     return f;
   }
 
+  function makeSiteFile(path, row) {
+    const bin = !!(row && row.encoding === 'base64');
+    const f = {
+      key: 's:' + path, site: true, path, name: path, page: SITE, kind: bin ? 'bin' : kindOfPath(path),
+      ov: !!row, fresh: false, enabled: true, readonly: bin, target: '', sort_order: 0, id: null,
+      loaded: !!row, doc: CodeMirror.Doc(bin ? '[فایلی دووانەیی — ' + Math.round((row.content.length * 0.75) / 1024) + ' KB — لێرە ناگۆڕدرێت]' : (row ? row.content : ''), MODE[kindOfPath(path)] || 'text/plain')
+    };
+    f.saved = { code: row && !bin ? row.content : '', meta: '' };
+    f.doc.on('change', onDocChange);
+    return f;
+  }
+  async function loadOriginal(f) {
+    try {
+      const r = await fetch('/' + f.path + (f.path.includes('?') ? '&' : '?') + 'kf_orig=1&_=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const t = await r.text();
+      f.doc.setValue(t); f.doc.clearHistory(); f.saved.code = t; f.loaded = true;
+    } catch (e) { f.loaded = true; f.doc.setValue('/* نەتوانرا ئۆریجینال بار بکرێت: ' + e.message + ' */'); f.saved.code = f.doc.getValue(); }
+  }
+  // پەیام بۆ Service Worker (sync / preview)
+  async function swPost(msg, timeout) {
+    try {
+      if (!('serviceWorker' in navigator)) return false;
+      const reg = await navigator.serviceWorker.getRegistration('/');
+      const w = reg && reg.active; if (!w) return false;
+      return await new Promise(res => {
+        const ch = new MessageChannel(), t = setTimeout(() => res(false), timeout || 3000);
+        ch.port1.onmessage = (e) => { clearTimeout(t); res(e.data || true); };
+        w.postMessage(msg, [ch.port2]);
+      });
+    } catch (e) { return false; }
+  }
+
   // ---------- بارکردن ----------
   async function load(keepOpen) {
     const { data, error } = await sb.from('site_code').select('*').order('page').order('sort_order').order('id');
@@ -139,10 +187,17 @@ else console.log('بەکارهێنەران:', data);
       $('tree').innerHTML = '<div class="hint">نەتوانرا بار بکرێت: ' + esc(error.message) + '<br>فایلی <b dir="ltr">site-code.sql</b> لە Supabase ڕەن بکە (تەنها جارێک).</div>';
       return false;
     }
-    const unsavedNew = files.filter(f => !f.id);
+    const unsavedNew = files.filter(f => !f.id && !f.site);
+    // فایلەکانی سایت (site_files)
+    overrides = new Map(); siteOk = true;
+    const sf = await sb.from('site_files').select('path,content,encoding,mime,enabled,updated_at').order('path');
+    if (sf.error) { siteOk = false; console.warn('site_files:', sf.error.message); }
+    else (sf.data || []).forEach(r => overrides.set(r.path, r));
+    const sitePaths = MANIFEST.concat([...overrides.keys()].filter(p => !MANIFEST.includes(p))).sort();
+    const siteFiles = siteOk ? sitePaths.map(p => makeSiteFile(p, overrides.get(p))) : [];
     const oldOpen = keepOpen ? open.slice() : [];
     const oldActive = activeKey;
-    files = (data || []).map(makeFile).concat(unsavedNew);
+    files = (data || []).map(makeFile).concat(unsavedNew, siteFiles);
     open = oldOpen.filter(k => byKey(k));
     activeKey = byKey(oldActive) ? oldActive : (open[0] || null);
     renderAll();
@@ -158,15 +213,16 @@ else console.log('بەکارهێنەران:', data);
       if (q && !(fileName(f).toLowerCase().includes(q) || f.page.toLowerCase().includes(q))) return;
       (groups[f.page] = groups[f.page] || []).push(f);
     });
-    const order = Object.keys(groups).sort((a, b) => (a === '*' ? -1 : b === '*' ? 1 : a.localeCompare(b)));
-    $('tree').innerHTML = order.map(p => `
+    const order = Object.keys(groups).sort((a, b) => (a === SITE ? 1 : b === SITE ? -1 : a === '*' ? -1 : b === '*' ? 1 : a.localeCompare(b)));
+    const siteHint = (!siteOk) ? '<div class="hint">بۆ بەشی «فایلەکانی سایت»، فایلی <b dir="ltr">site-files.sql</b> لە Supabase ڕەن بکە (تەنها جارێک).</div>' : '';
+    $('tree').innerHTML = siteHint + order.map(p => `
       <div class="grp ${closedGroups.has(p) ? 'closed' : ''}" data-p="${esc(p)}">
         <div class="gh"><span class="ar">▼</span><span>${esc(pageLabel(p))}</span><span class="n">${groups[p].length}</span></div>
         <div class="files">${groups[p].map(f => `
           <div class="file ${f.key === activeKey ? 'active' : ''}" data-k="${f.key}">
-            <span class="ic ${f.kind}">${f.kind === 'js' ? 'JS' : f.kind === 'css' ? '#' : '<>'}</span>
+            <span class="ic ${f.kind}">${f.kind === 'js' ? 'JS' : f.kind === 'css' ? '#' : f.kind === 'html' ? '<>' : f.kind === 'json' ? '{}' : f.kind === 'bin' ? '▣' : '≡'}</span>
             <span class="nm">${esc(fileName(f))}</span>
-            ${f.enabled ? '' : '<span class="off">ناچالاک</span>'}
+            ${f.site ? (f.ov ? '<span class="ovr">گۆڕاو</span>' : '') : (f.enabled ? '' : '<span class="off">ناچالاک</span>')}
             ${isDirty(f) ? '<span class="dot"></span>' : ''}
           </div>`).join('')}</div>
       </div>`).join('') || '<div class="hint">هیچ فایلێک نییە. بە دوگمەی ＋ فایلی نوێ دروست بکە.</div>';
@@ -181,8 +237,8 @@ else console.log('بەکارهێنەران:', data);
   }
   function renderStatus() {
     const f = cur();
-    $('curPath').textContent = f ? f.page + ' / ' + fileName(f) : '';
-    $('stKind').textContent = f ? { js: 'JavaScript', css: 'CSS', html: 'HTML' }[f.kind] : '';
+    $('curPath').textContent = f ? (f.site ? f.path : f.page + ' / ' + fileName(f)) : '';
+    $('stKind').textContent = f ? ({ js: 'JavaScript', css: 'CSS', html: 'HTML' }[f.kind] || (f.kind || '').toUpperCase()) : '';
     const d = f && isDirty(f);
     $('stState').innerHTML = !f ? '' : d ? '<span class="warn">● پاشەکەوت نەکراوە</span>' : '<span class="ok">✓ پاشەکەوتکراوە</span>';
     $('btnSave').classList.toggle('dirty', !!d);
@@ -199,7 +255,9 @@ else console.log('بەکارهێنەران:', data);
     if (!open.includes(key)) open.push(key);
     $('emptyState').style.display = 'none';
     cm.swapDoc(f.doc);
-    cm.setOption('mode', MODE[f.kind]);
+    cm.setOption('mode', MODE[f.site ? kindOfPath(f.path) : f.kind] || 'text/plain');
+    cm.setOption('readOnly', f.readonly ? 'nocursor' : false);
+    if (f.site && !f.loaded) { f.loaded = true; f.busy = true; f.doc.setValue('/* بار دەکرێت... */'); loadOriginal(f).then(() => { f.busy = false; if (activeKey === f.key) { cm.refresh(); } renderAll(); }); }
     renderAll();
     closeSide();
     if (!silent && window.innerWidth > 820) cm.focus();
@@ -209,7 +267,11 @@ else console.log('بەکارهێنەران:', data);
   function closeTab(key) {
     const f = byKey(key);
     if (f && isDirty(f) && !confirm('گۆڕانکارییەکانی «' + fileName(f) + '» پاشەکەوت نەکراون. دابخرێت؟')) return;
-    if (f && !f.id) files = files.filter(x => x !== f);
+    if (f && f.site) {
+      if (f.fresh) { files = files.filter(x => x !== f); }
+      else if (isDirty(f)) { f.doc.setValue(f.saved.code); f.doc.clearHistory(); }
+    }
+    else if (f && !f.id) files = files.filter(x => x !== f);
     else if (f && f.id && isDirty(f)) { // گەڕاندنەوە بۆ دۆخی پاشەکەوتکراو
       f.doc.setValue(f.saved.code); const m = JSON.parse(f.saved.meta);
       [f.name, f.page, f.kind, f.target, f.enabled, f.sort_order] = m; f.doc.clearHistory();
@@ -232,6 +294,17 @@ else console.log('بەکارهێنەران:', data);
 
   // ---------- پاشەکەوت ----------
   async function saveFile(f) {
+    if (f.site) {
+      if (f.readonly) throw new Error('ئەم فایلە ناگۆڕدرێت');
+      if (PROTECTED.includes(f.path)) throw new Error('ئەم فایلە پارێزراوە');
+      const content = f.doc.getValue();
+      const r = await sb.from('site_files').upsert({ path: f.path, content, encoding: 'text', enabled: true }, { onConflict: 'path' }).select().single();
+      if (r.error) throw r.error;
+      overrides.set(f.path, r.data);
+      f.ov = true; f.fresh = false; f.saved.code = content;
+      swPost({ type: 'sync' });
+      return;
+    }
     const row = {
       name: f.name.trim() || 'بێ ناو', page: f.page, kind: f.kind,
       target: f.kind === 'html' ? (f.target.trim() || null) : null,
@@ -277,10 +350,10 @@ else console.log('بەکارهێنەران:', data);
     toast('فایلی نوێ دروست کرا — Ctrl+S بۆ پاشەکەوت');
   }
   function openNew() {
-    $('tplList').innerHTML = TEMPLATES.map((t, i) => `<button class="tpl" data-i="${i}"><b>${esc(t.t)}</b><span>${esc(t.d)}</span></button>`).join('');
+    $('tplList').innerHTML = `<button class="tpl" data-site="1"><b>📂 فایلی سایت (هەر شوێنێک)</b><span>پەڕە یان فایلی نوێ وەک about.html یان js/app.js — راستەوخۆ بۆ هەمووان</span></button>` + TEMPLATES.map((t, i) => `<button class="tpl" data-i="${i}"><b>${esc(t.t)}</b><span>${esc(t.d)}</span></button>`).join('');
     openSheet('newWrap');
   }
-  $('tplList').addEventListener('click', (e) => { const b = e.target.closest('.tpl'); if (b) newFile(TEMPLATES[+b.dataset.i]); });
+  $('tplList').addEventListener('click', (e) => { const b = e.target.closest('.tpl'); if (!b) return; if (b.dataset.site) createSiteFile(); else newFile(TEMPLATES[+b.dataset.i]); });
 
   // ---------- ڕێکخستنی فایل ----------
   function fillPageSelect(selected) {
@@ -298,6 +371,7 @@ else console.log('بەکارهێنەران:', data);
   }
   function openProps() {
     const f = cur(); if (!f) { toast('سەرەتا فایلێک بکەرەوە'); return; }
+    if (f.site) { openSiteSheet(f); return; }
     $('pName').value = f.name; fillPageSelect(f.page); $('pKind').value = f.kind;
     $('pSlug').value = ''; $('pTarget').value = f.target || ''; $('pOrder').value = f.sort_order || 0; $('pEnabled').checked = !!f.enabled;
     $('pDelete').style.display = f.id ? '' : 'none';
@@ -335,8 +409,113 @@ else console.log('بەکارهێنەران:', data);
     c.saved = { code: '', meta: '' }; files.push(c); closeSheet('propsWrap'); activate(c.key);
   });
 
+  // ---------- فایلەکانی سایت: ڕێکخستن، مێژوو، فایلی نوێ، بارکردن ----------
+  const fmtTime = (t) => { try { return new Date(t).toLocaleString('ckb-IQ'); } catch (e) { return t; } };
+  async function openSiteSheet(f) {
+    $('sPath').textContent = f.path;
+    $('sState').textContent = f.readonly ? 'فایلی دووانەیی (وێنە/فۆنت...) — ناگۆڕدرێت، تەنها دەتوانیت بیسڕیتەوە'
+      : f.ov ? '✏️ ئەم فایلە لێرە گۆڕاوە — وەشانی GitHub جێگیر کراوەتەوە بۆ هەمووان'
+      : f.fresh ? '🆕 فایلی نوێ — پاشەکەوتی بکە' : '📄 ئەمە وەشانی GitHubـە. هەر گۆڕانکارییەک و پاشەکەوت = بۆ هەمووان جێگیر دەبێت';
+    $('sOpen').href = '/' + f.path + (kindOfPath(f.path) === 'html' ? '?safe=1' : '');
+    $('sRestore').textContent = MANIFEST.includes(f.path) ? '↺ گەڕاندنەوە بۆ ئۆریجینالی GitHub' : '🗑 سڕینەوەی ئەم فایلە';
+    $('sRestore').style.display = (f.ov || f.fresh) ? '' : 'none';
+    $('sHist').innerHTML = '<div class="hint">باردەکرێت...</div>';
+    openSheet('siteWrap');
+    const h = await sb.from('site_files_history').select('id,saved_at,content,encoding').eq('path', f.path).order('saved_at', { ascending: false }).limit(30);
+    if (h.error || !h.data || !h.data.length) { $('sHist').innerHTML = '<div class="hint">هێشتا مێژوو نییە (دوای یەکەم گۆڕانکاری دروست دەبێت).</div>'; return; }
+    f._hist = h.data;
+    $('sHist').innerHTML = h.data.map((x, i) => `<button class="tpl" data-h="${i}"><b>${esc(fmtTime(x.saved_at))}</b><span>${x.content.length.toLocaleString()} پیت — کرتە بکە بۆ هێنانەوە بۆ ئیدیتۆر</span></button>`).join('');
+  }
+  $('sHist').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-h]'); const f = cur(); if (!b || !f || !f._hist) return;
+    const x = f._hist[+b.dataset.h]; if (!x || x.encoding !== 'text') { toast('ئەم وەشانە دووانەییە', true); return; }
+    f.doc.setValue(x.content); closeSheet('siteWrap'); toast('وەشانی کۆن هێنرا — پاشەکەوتی بکە بۆ جێگیرکردن');
+  });
+  $('sCopyOrig').addEventListener('click', async () => {
+    const f = cur(); if (!f || f.readonly) return;
+    try {
+      const r = await fetch('/' + f.path + '?kf_orig=1&_=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      f.doc.setValue(await r.text()); closeSheet('siteWrap'); toast('ئۆریجینال هێنرا — پاشەکەوتی بکە یان وازی لێ بهێنە');
+    } catch (e) { toast('ئۆریجینال نەدۆزرایەوە: ' + e.message, true); }
+  });
+  $('sRestore').addEventListener('click', async () => {
+    const f = cur(); if (!f) return;
+    const isOrig = MANIFEST.includes(f.path);
+    if (!confirm(isOrig ? 'دەگەڕێتەوە بۆ وەشانی GitHub بۆ هەمووان. بەردەوام؟' : 'ئەم فایلە بە تەواوی دەسڕدرێتەوە. بەردەوام؟')) return;
+    if (f.ov) {
+      const { error } = await sb.from('site_files').delete().eq('path', f.path);
+      if (error) { toast('نەتوانرا: ' + error.message, true); return; }
+      overrides.delete(f.path); swPost({ type: 'sync' });
+    }
+    f.ov = false; f.fresh = false;
+    closeSheet('siteWrap');
+    if (isOrig) { f.loaded = false; f.saved.code = ''; activate(f.key, true); toast('✓ گەڕایەوە بۆ ئۆریجینال'); }
+    else { files = files.filter(x => x !== f); open = open.filter(k => k !== f.key); activeKey = open[0] || null; if (activeKey) activate(activeKey, true); else showEmpty(); toast('سڕایەوە'); }
+  });
+  const HTML_SKEL = `<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پەڕەی نوێ | Kurd Technology</title>
+<link rel="stylesheet" href="services.css">
+</head>
+<body>
+  <h1 style="text-align:center;margin:40px 16px;">پەڕەی نوێ</h1>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="site-code.js"></script>
+</body>
+</html>
+`;
+  function createSiteFile() {
+    closeSheet('newWrap');
+    const p = (prompt('ناوی فایل (ئینگلیزی) — نموونە: about.html  یان  js/app.js  یان  my.css') || '').trim();
+    if (!p) return;
+    if (!/^[A-Za-z0-9][A-Za-z0-9._\/-]{0,100}$/.test(p) || p.includes('..')) { toast('ناوی فایل دروست نییە', true); return; }
+    if (PROTECTED.includes(p)) { toast('ئەم فایلە پارێزراوە', true); return; }
+    const ex = byKey('s:' + p); if (ex) { activate(ex.key); return; }
+    const f = makeSiteFile(p, null); f.loaded = true; f.fresh = true;
+    f.doc.setValue(kindOfPath(p) === 'html' ? HTML_SKEL : ''); f.doc.clearHistory();
+    files.push(f); closedGroups.delete(SITE); activate(f.key);
+    toast('فایلی نوێ — Ctrl+S بۆ پاشەکەوت');
+  }
+  $('mUpload').addEventListener('click', () => $('uploadFile').click());
+  $('uploadFile').addEventListener('change', async (e) => {
+    const file = e.target.files[0]; e.target.value = ''; if (!file) return;
+    closeSheet('moreWrap');
+    if (file.size > 1.5 * 1024 * 1024) { toast('فایلەکە لە ١.٥MB گەورەترە', true); return; }
+    const p = (prompt('ناوی فایل لە سایتدا:', file.name.replace(/\s+/g, '-')) || '').trim();
+    if (!p) return;
+    if (!/^[A-Za-z0-9][A-Za-z0-9._\/-]{0,100}$/.test(p) || p.includes('..') || PROTECTED.includes(p)) { toast('ناوی فایل دروست نییە یان پارێزراوە', true); return; }
+    const isText = TEXT_EXT.includes(extOf(p));
+    let content;
+    try {
+      if (isText) content = await file.text();
+      else content = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1] || ''); r.onerror = rej; r.readAsDataURL(file); });
+    } catch (err) { toast('نەخوێنرایەوە', true); return; }
+    const { data, error } = await sb.from('site_files').upsert({ path: p, content, encoding: isText ? 'text' : 'base64', mime: file.type || null, enabled: true }, { onConflict: 'path' }).select().single();
+    if (error) { toast('نەتوانرا: ' + error.message, true); return; }
+    overrides.set(p, data);
+    files = files.filter(x => x.key !== 's:' + p);
+    const f = makeSiteFile(p, data); files.push(f); closedGroups.delete(SITE);
+    swPost({ type: 'sync' }); renderAll(); toast('✓ بارکرا و بۆ هەمووان چالاکە: /' + p);
+  });
+
   // ---------- پێشبینین ----------
+  function guessPage(path) {
+    if (/\.html?$/i.test(path)) return path;
+    const b = path.toLowerCase();
+    if (b.startsWith('admin')) return 'admin.html';
+    if (b.startsWith('cv-')) return 'cv-builder.html';
+    if (b.startsWith('games')) return 'games.html';
+    if (b.startsWith('student')) return 'student.html';
+    if (b.startsWith('auth') || b.startsWith('style') || b.startsWith('device')) return 'index.html';
+    return 'services.html';
+  }
   function previewUrl(f) {
+    if (f.site) { const g = guessPage(f.path); return g + '?preview=1&kf_pv=1'; }
     const p = f.page; let u;
     if (p === '*') u = 'services.html'; else if (p.startsWith('custom-')) u = 'custom.html?p=' + encodeURIComponent(p.slice(7));
     else u = p + '.html';
@@ -346,10 +525,18 @@ else console.log('بەکارهێنەران:', data);
     const rows = files.map(f => ({ id: f.id, name: f.name, page: f.page, kind: f.kind, target: f.target || null, code: f.doc.getValue(), enabled: f.enabled, sort_order: +f.sort_order || 0 }));
     try { localStorage.setItem('kurd_code_preview', JSON.stringify({ t: Date.now(), rows })); } catch (e) { toast('پێشبینین کار ناکات (localStorage)', true); }
   }
-  let prevShown = '';
-  function refreshPreview(force) {
+  let prevShown = '', swPrevSent = false;
+  async function pushSwPreview() {
+    const m = {};
+    files.forEach(f => { if (f.site && f.loaded && !f.readonly && isDirty(f)) m[f.path] = { path: f.path, content: f.doc.getValue(), encoding: 'text', mime: null }; });
+    if (!Object.keys(m).length && !swPrevSent) return;
+    swPrevSent = Object.keys(m).length > 0;
+    await swPost({ type: 'preview', files: m }, 1200);
+  }
+  async function refreshPreview(force) {
     const f = cur(); if (!f) return;
     pushPreviewData();
+    await pushSwPreview();
     const url = previewUrl(f);
     $('prevUrl').textContent = url.replace(/[?&]preview=1/, '');
     if (force) clearConsole();
@@ -425,9 +612,10 @@ else console.log('بەکارهێنەران:', data);
   $('mFoldAll').addEventListener('click', () => { cm.execCommand('foldAll'); closeSheet('moreWrap'); });
   $('mUnfoldAll').addEventListener('click', () => { cm.execCommand('unfoldAll'); closeSheet('moreWrap'); });
   $('mExport').addEventListener('click', () => {
-    const rows = files.filter(f => f.id).map(f => ({ name: f.name, page: f.page, kind: f.kind, target: f.target || null, code: f.saved.code, enabled: f.enabled, sort_order: f.sort_order }));
+    const rows = files.filter(f => f.id && !f.site).map(f => ({ name: f.name, page: f.page, kind: f.kind, target: f.target || null, code: f.saved.code, enabled: f.enabled, sort_order: f.sort_order }));
+    const siteFiles = [...overrides.values()].map(r => ({ path: r.path, content: r.content, encoding: r.encoding, mime: r.mime }));
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify({ kurdCode: 1, rows }, null, 2)], { type: 'application/json' }));
+    a.href = URL.createObjectURL(new Blob([JSON.stringify({ kurdCode: 1, rows, siteFiles }, null, 2)], { type: 'application/json' }));
     a.download = 'kurd-code-backup-' + new Date().toISOString().slice(0, 10) + '.json'; a.click();
     closeSheet('moreWrap'); toast('بەکئەپ دابەزی');
   });
@@ -435,7 +623,16 @@ else console.log('بەکارهێنەران:', data);
   $('importFile').addEventListener('change', async (e) => {
     const file = e.target.files[0]; e.target.value = ''; if (!file) return;
     try {
-      const j = JSON.parse(await file.text()); if (!j.rows || !Array.isArray(j.rows)) throw new Error('فایلەکە دروست نییە');
+      const j = JSON.parse(await file.text()); if (!Array.isArray(j.rows) && !Array.isArray(j.siteFiles)) throw new Error('فایلەکە دروست نییە');
+      j.rows = j.rows || [];
+      let sn = 0;
+      (j.siteFiles || []).forEach(r => {
+        if (!r || !r.path || r.encoding === 'base64' || PROTECTED.includes(r.path)) return;
+        let f = byKey('s:' + r.path);
+        if (!f) { f = makeSiteFile(r.path, null); f.fresh = true; files.push(f); }
+        f.loaded = true; f.doc.setValue(r.content || ''); sn++;
+      });
+      if (sn) toast(sn + ' فایلی سایت هێنرا (پاشەکەوتیان بکە)');
       j.rows.forEach(r => { const f = makeFile({ name: r.name, page: r.page, kind: ['js', 'css', 'html'].includes(r.kind) ? r.kind : 'js', code: r.code, enabled: false, target: r.target, sort_order: r.sort_order }); f.saved = { code: '', meta: '' }; files.push(f); });
       closeSheet('moreWrap'); renderAll(); toast(j.rows.length + ' فایل هێنرا (ناچالاکن، پاشەکەوتیان بکە و چالاکیان بکە)');
     } catch (err) { toast('هەڵە: ' + err.message, true); }
