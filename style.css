@@ -404,3 +404,7 @@ footer.legal{
 @media (prefers-reduced-motion: reduce){
   .card, .sun-glow{ animation:none; }
 }
+
+/* چاوەڕێبە */
+.wait-spin{width:42px;height:42px;margin:26px auto 14px;border-radius:50%;border:3px solid rgba(255,255,255,.18);border-top-color:#FDBA12;animation:waitSpin .8s linear infinite}
+@keyframes waitSpin{to{transform:rotate(360deg)}}
