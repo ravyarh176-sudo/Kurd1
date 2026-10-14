@@ -6,16 +6,7 @@ window.addEventListener('kurdtech:ready', async () => {
   const supabase = window.kurdtechSupabase;
   const profile = window.kurdtechProfile;
 
-  const userChip = document.getElementById('userChip');
-  if (userChip) {
-    userChip.addEventListener('click', async (e) => {
-      e.preventDefault();
-      if (confirm('دەتەوێت چوونەدەرەوە بکەیت؟')) {
-        await supabase.auth.signOut();
-        window.location.href = 'index.html';
-      }
-    });
-  }
+  // کلیکی ڕەسمی بەکارهێنەر (userChip) لە profile.js ڕێکدەخرێت
 
   const isOwner = profile && profile.role === 'owner';
   const ownerBadge = document.getElementById('ownerBadge');
