@@ -31,6 +31,12 @@ window.addEventListener('kurdtech:ready', async () => {
     }
 
     allUsers = data || [];
+    try {
+      const r = await supabase.from('user_ids').select('user_id, member_code');
+      const m = {};
+      (r.data || []).forEach(x => { m[x.user_id] = x.member_code; });
+      allUsers.forEach(u => { u.code = m[u.id] || ''; });
+    } catch (e) {}
     renderStats();
     renderList();
   }
@@ -45,12 +51,17 @@ window.addEventListener('kurdtech:ready', async () => {
     const list = $('userList');
     if (!list) return;
 
-    if (!allUsers.length) {
-      list.innerHTML = `<div class="loading-hint">هیچ بەکارهێنەرێک نییە</div>`;
+    const q = (($('userSearch') && $('userSearch').value) || '').trim().toLowerCase().replace(/\s+/g, '');
+    const shown = !q ? allUsers : allUsers.filter(u =>
+      (u.code || '').toLowerCase().replace('-', '').includes(q.replace('-', '')) ||
+      (u.full_name || '').toLowerCase().replace(/\s+/g, '').includes(q));
+
+    if (!shown.length) {
+      list.innerHTML = `<div class="loading-hint">${q ? 'هیچ ئەکاونتێک بەو ئایدییە نەدۆزرایەوە' : 'هیچ بەکارهێنەرێک نییە'}</div>`;
       return;
     }
 
-    list.innerHTML = allUsers.map(u => {
+    list.innerHTML = shown.map(u => {
       const badge = u.role === 'owner'
         ? '<span class="uc-badge owner">خاوەن</span>'
         : (u.banned ? '<span class="uc-badge banned">دەرکراو</span>' : '<span class="uc-badge active">چالاک</span>');
@@ -62,7 +73,7 @@ window.addEventListener('kurdtech:ready', async () => {
           <div class="uc-avatar">${initials(u.full_name)}</div>
           <div class="uc-info">
             <div class="uc-name">${escapeText(u.full_name || 'بەکارهێنەر')}</div>
-            <div class="uc-sub">${createdDate}</div>
+            <div class="uc-sub kcode">${escapeText(u.code || '')}</div>
           </div>
           ${badge}
         </div>`;
@@ -78,6 +89,7 @@ window.addEventListener('kurdtech:ready', async () => {
     document.querySelectorAll('.admin-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
     if ($('tabChat')) $('tabChat').hidden = tab !== 'chat';
     if ($('tabManage')) $('tabManage').hidden = tab !== 'manage';
+    if ($('tabUid')) $('tabUid').hidden = tab !== 'uid';
   }
 
   document.querySelectorAll('.admin-tab').forEach(t => {
@@ -95,6 +107,17 @@ window.addEventListener('kurdtech:ready', async () => {
     });
   }
 
+  if ($('userSearch')) $('userSearch').addEventListener('input', renderList);
+  if ($('udCodeCopy')) $('udCodeCopy').addEventListener('click', async () => {
+    const t = activeUser && activeUser.code; if (!t) return;
+    try { await navigator.clipboard.writeText(t); } catch (e) {
+      const x = document.createElement('textarea'); x.value = t; document.body.appendChild(x); x.select();
+      try { document.execCommand('copy'); } catch (_) {} x.remove();
+    }
+    $('udCodeCopy').textContent = '✓ کۆپی کرا';
+    setTimeout(() => { $('udCodeCopy').textContent = 'کۆپی کردنی ئایدی'; }, 1500);
+  });
+
   function openUser(id) {
     const u = allUsers.find(x => x.id === id);
     if (!u) return;
@@ -105,6 +128,7 @@ window.addEventListener('kurdtech:ready', async () => {
     if ($('udRole')) $('udRole').textContent = u.role === 'owner' ? 'خاوەنی ماڵپەڕ' : 'بەکارهێنەر';
     if ($('udStatus')) $('udStatus').textContent = u.banned ? 'دەرکراوە' : 'چالاکە';
     if ($('banReasonInput')) $('banReasonInput').value = u.ban_reason || '';
+    if ($('udCode')) $('udCode').textContent = u.code || 'نییە';
 
     const banBtn = $('banToggleBtn');
     if (banBtn) {
@@ -216,14 +240,14 @@ window.addEventListener('kurdtech:ready', async () => {
   async function loadDevices() {
     const box = $('deviceList');
     if (!box) return;
-    const { data, error } = await supabase.rpc('admin_list_devices');
-    if (error) { box.innerHTML = '<div class="loading-hint">نەتوانرا ئامێرەکان بار بکرێن. SQLەکە ڕەن کردووە؟</div>'; return; }
+    const { data, error } = await supabase.rpc('admin_list_devices_safe');
+    if (error) { box.innerHTML = '<div class="loading-hint">نەتوانرا ئامێرەکان بار بکرێن. user-profile.sql ـت ڕەن کردووە؟</div>'; return; }
     box.innerHTML = (data || []).map(d => `
       <div class="user-card" style="cursor:default;">
         <div class="uc-avatar">${d.blocked ? '⛔' : '📱'}</div>
         <div class="uc-info">
-          <div class="uc-name">${escapeText(d.full_name || 'بەکارهێنەر')} — ${escapeText(d.email || '')}</div>
-          <div class="uc-sub" dir="ltr" style="text-align:right;">${escapeText(d.model || '')} • ${escapeText(d.ip || '')}<br>${d.last_seen ? new Date(d.last_seen).toLocaleString() : ''}</div>
+          <div class="uc-name">${escapeText(d.full_name || 'بەکارهێنەر')}</div>
+          <div class="uc-sub kcode">${escapeText(d.member_code || '—')}</div>
         </div>
         <button type="button" class="dev-release" data-id="${escapeText(d.device_id)}"
           style="border:none;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer;background:#FDBA12;color:#241800;">ئازادکردن</button>
@@ -372,6 +396,6 @@ button{ letter-spacing:0; }` }
   loadCode();
   loadDevices();
   loadUsers();
-  loadCvStats();
+  // loadCvStats(); // ئامارەکان لابران
   loadLocks();
 });
