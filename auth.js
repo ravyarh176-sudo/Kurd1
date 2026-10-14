@@ -48,7 +48,7 @@
   }
 
   function showStep(id) {
-    ['stepWelcome', 'stepName', 'stepFlash'].forEach(s => { $(s).hidden = s !== id; });
+    ['stepWait', 'stepWelcome', 'stepName', 'stepFlash'].forEach(s => { $(s).hidden = s !== id; });
   }
 
   // ---------- Step 1: "Continue with Google" ----------
