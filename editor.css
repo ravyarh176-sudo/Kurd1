@@ -134,3 +134,7 @@ li.CodeMirror-hint-active{ background:var(--gold); color:#241800; }
   #btnUndo,#btnRedo{ display:none; }
 }
 @media(min-width:821px){ #btnTree{ display:none; } }
+
+/* فایلەکانی سایت */
+.file .ic.json{ color:#A3E635; } .file .ic.xml{ color:#F472B6; } .file .ic.txt,.file .ic.bin{ color:#94A3B8; }
+.file .ovr{ font-size:10px; padding:1px 6px; border-radius:6px; background:rgba(74,222,128,.16); color:#4ADE80; flex:none; }
