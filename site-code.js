@@ -1,6 +1,34 @@
-// Kurd Technology — بارکردنی «کۆدی زیادە» (site_code) لە داتابەیسەوە.
+// Kurd Technology — بارکردنی «کۆدی زیادە» (site_code) لە داتابەیسەوە + «فایلەکانی سایت» (site_files) لە ڕێگەی sw.js.
 // دەبێت دوای guard.js و دوای هەموو سکریپتەکانی تر بار بکرێت.
 // ئەگەر کۆدێک سایتەکەی تێکدا: ?safe=1 لە کۆتایی ئەدرەس زیاد بکە بۆ ناچالاککردنیان.
+// ئەگەر Service Worker کێشەی دروست کرد: ?nosw=1 لە کۆتایی ئەدرەس زیاد بکە بۆ لابردنی.
+
+// ---------- Service Worker (جێگرتنەوەی فایلەکانی GitHub بە فایلەکانی ئیدیتۆر) ----------
+(function () {
+  try {
+    if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
+    if (/[?&]nosw=1/.test(location.search)) {
+      navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+      return;
+    }
+    const wasControlled = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+    const here = (location.pathname.replace(/^\/+/, '') || 'index.html');
+    // یەکەم سەردان: دوای چالاکبوونی SW، ئەگەر ئەم پەڕەیە جێگرەوەی هەبوو، یەکجار نوێی بکەرەوە
+    if (!wasControlled && !/editor\.html$/.test(here) && !/[?&](safe|preview)=1/.test(location.search)) {
+      navigator.serviceWorker.ready.then(reg => {
+        const w = reg.active; if (!w) return;
+        const ch = new MessageChannel();
+        ch.port1.onmessage = (m) => {
+          let done = false; try { done = sessionStorage.getItem('kf_swr') === here; } catch (e) {}
+          if (m.data && m.data.has && !done) { try { sessionStorage.setItem('kf_swr', here); } catch (e) {} location.reload(); }
+        };
+        w.postMessage({ type: 'has', path: here.replace(/[?#].*$/, '') }, [ch.port2]);
+      }).catch(() => {});
+    }
+  } catch (e) {}
+})();
+
 (function () {
   if (/[?&]safe=1/.test(location.search)) return;
 
