@@ -1,6 +1,7 @@
 // Kurd Technology — Service Worker: فایلەکانی سایت لە ئیدیتۆر (خشتەی site_files) جێگەی فایلەکانی GitHub دەگرنەوە.
 // هەر فایلێک لە site_files هەبێت (بۆ نموونە services.html)، لە جیاتی وەشانی GitHub پیشان دەدرێت.
 // دەستپێکردن: site-code.js ئەم فایلە تۆمار دەکات. ئەگەر فایلێک نەبێت، وەشانی GitHub بەکار دێت.
+// خێرایی: فایلە جێگیرەکان (JS/CSS/وێنە/فۆنت/CDN) لەناو ئامێرەکە پاشەکەوت دەکرێن، بۆیە لەسەر ئینتەرنێتی لاواز هەر خێرا دەکرێنەوە.
 'use strict';
 self.window = self;
 try { importScripts('config.js'); } catch (e) {}
@@ -9,6 +10,9 @@ const URL_ = self.SUPABASE_URL, KEY = self.SUPABASE_ANON_KEY;
 // ئەم فایلانە هەرگیز نادرێنە جێگە (تا ئیدیتۆر و ڕاگرتنی سایتەکە هەمیشە ساغ بێت)
 const PROTECT = ['sw.js', 'config.js', 'site-code.js', 'editor.html', 'editor.js', 'editor.css'];
 const DB = 'kf_sw', ST = 'files';
+const CACHE = 'kf-static-v1';
+const CDN = ['cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com', 'cdnjs.cloudflare.com'];
+const IMG_EXT = /\.(?:png|jpe?g|webp|gif|svg|ico|woff2?|ttf|mp3)$/i;
 
 let ov = new Map();          // path -> {path, content, encoding, mime, updated_at}
 let pv = new Map();          // پێشبینین (لە ئیدیتۆرەوە، پاشەکەوتنەکراو)
@@ -110,7 +114,39 @@ function lookup(map, p) {
 }
 
 self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (e) => e.waitUntil((async () => { await self.clients.claim(); await sync(true); })()));
+self.addEventListener('activate', (e) => e.waitUntil((async () => {
+  try { const ks = await caches.keys(); await Promise.all(ks.filter(k => k.startsWith('kf-static-') && k !== CACHE).map(k => caches.delete(k))); } catch (x) {}
+  await self.clients.claim(); await sync(true);
+})()));
+
+// ---------- خێرایی: پاشەکەوتکردن لەناو ئامێر ----------
+const okRes = (r) => r && (r.status === 200 || r.type === 'opaque');
+// وێنە/فۆنت/CDN: یەکسەر لە پاشەکەوت، لە پشتەوە نوێ دەکرێتەوە
+async function swr(req, e) {
+  const c = await caches.open(CACHE);
+  const hit = await c.match(req);
+  const net = fetch(req).then(r => { if (okRes(r)) c.put(req, r.clone()); return r; }).catch(() => null);
+  if (hit) { e.waitUntil(net); return hit; }
+  return (await net) || Response.error();
+}
+// پەڕە/JS/CSS: ئینتەرنێت یەکەم؛ ئەگەر لەسەر کات (ms) وەڵامی نەدا، لە پاشەکەوت
+async function netFirst(req, e, ms, isDoc) {
+  const c = await caches.open(CACHE);
+  const net = fetch(req).then(r => { if (okRes(r) && r.type !== 'opaqueredirect' && !r.redirected) c.put(req, r.clone()); return r; }).catch(() => null);
+  const hit = await c.match(req, isDoc ? { ignoreSearch: true } : undefined);
+  if (!hit) return (await net) || Response.error();
+  const first = await Promise.race([net, new Promise(res => setTimeout(() => res(null), ms))]);
+  if (first) return first;
+  e.waitUntil(net);
+  return hit;
+}
+function smart(req, u, e) {
+  if (req.headers.has('range')) return fetch(req);
+  if (req.mode === 'navigate' || req.destination === 'document') return netFirst(req, e, 2500, true);
+  if (/\.(?:js|css)$/i.test(u.pathname)) return netFirst(req, e, 1500, false);
+  if (IMG_EXT.test(u.pathname)) return swr(req, e);
+  return fetch(req);
+}
 
 self.addEventListener('message', (e) => {
   const d = e.data || {};
@@ -123,24 +159,26 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const u = new URL(req.url);
-  if (u.origin !== self.location.origin) return;
+  if (u.origin !== self.location.origin) {
+    if (CDN.includes(u.hostname) && !req.headers.has('range')) e.respondWith(swr(req, e));
+    return;
+  }
   const p = pathOf(u);
   if (PROTECT.includes(p)) return;
   if (u.searchParams.has('kf_orig')) return;              // وەشانی ئۆریجینالی GitHub
   if (/(^|[?&])safe=1/.test(u.search)) return;              // دۆخی ئاسوودە
+  if (/^rest\/v1\//.test(p)) return;
   if (req.mode === 'navigate') e.waitUntil(sync(false));
 
-  if (loaded && !ov.size && !pv.size) return;               // هیچ جێگەیەک نییە: خێرا
   e.respondWith((async () => {
     await ready;
     let cu = null;
-    const cid = e.resultingClientId || e.clientId;
     if (e.clientId) { try { const c = await self.clients.get(e.clientId); cu = c && c.url; } catch (x) {} }
     if (cu && /\/editor\.html/.test(cu)) return fetch(req);   // ئیدیتۆر هەمیشە وەشانی ئۆریجینال بەکار دێنێت
     if (cu && /[?&]safe=1/.test(cu)) return fetch(req);
     const inPreview = /[?&]kf_pv=1/.test(u.search) || (cu && /[?&]kf_pv=1/.test(cu));
     if (inPreview) { const r = lookup(pv, p); if (r) return build(r); }
     const r = lookup(ov, p);
-    return r ? build(r) : fetch(req);
+    return r ? build(r) : smart(req, u, e);
   })());
 });
